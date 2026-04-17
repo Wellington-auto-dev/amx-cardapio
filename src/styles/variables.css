@@ -1,0 +1,45 @@
+/* AMX — CSS Custom Properties
+   Dark premium theme — troque apenas este arquivo por cliente */
+
+:root {
+  /* Acento principal */
+  --color-primary: #F5A623;
+  --color-primary-dark: #D4900F;
+  --color-primary-light: #FFB84D;
+
+  /* Hierarquia de fundo (dark) */
+  --color-background: #0D0D0D;   /* Base — o mais escuro */
+  --color-surface: #1A1A1A;      /* Cards, painéis */
+  --color-surface-2: #252525;    /* Elementos elevados, headers de grupo */
+  --color-surface-3: #2E2E2E;    /* Hover, inputs */
+
+  /* Texto */
+  --color-text: #F5F5F5;
+  --color-text-secondary: #9CA3AF;
+  --color-text-muted: #6B7280;
+
+  /* Bordas */
+  --color-border: #2E2E2E;
+  --color-border-subtle: #222222;
+
+  /* Semânticas */
+  --color-success: #10B981;
+  --color-error: #EF4444;
+  --color-warning: #F59E0B;
+  --color-whatsapp: #25D366;
+  --color-whatsapp-dark: #1DA851;
+
+  /* Tipografia */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Raios */
+  --radius-card: 16px;
+  --radius-button: 12px;
+  --radius-pill: 999px;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 16px 0 rgb(0 0 0 / 0.5), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 32px 0 rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+  --shadow-glow: 0 0 20px rgb(245 166 35 / 0.25);
+}
