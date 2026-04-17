@@ -5,12 +5,13 @@ import { useToast } from '@/hooks/useToast';
 import { useCatalog } from '@/hooks/useCatalog';
 import { TokenGuard } from '@/components/admin/TokenGuard';
 import { StoreSettings } from '@/components/admin/StoreSettings';
+import { Dashboard } from '@/components/admin/Dashboard';
 import { ImportCard } from '@/components/admin/ImportCard';
 import { ItemList } from '@/components/admin/ItemList';
 import { ManualItemForm } from '@/components/admin/ManualItemForm';
 import { ToastContainer } from '@/components/ui/Toast';
 
-const TABS = ['Importar', 'Meu Cardápio', 'Adicionar Item'] as const;
+const TABS = ['Dashboard', 'Importar', 'Meu Cardápio', 'Adicionar Item'] as const;
 
 export default function AdminPage() {
   const { slug = '' } = useParams<{ slug: string }>();
@@ -112,15 +113,19 @@ export default function AdminPage() {
             {/* Conteúdo */}
             <div className="p-4">
               {activeTab === 0 && session && (
+                <Dashboard session={session} nomeLoja={nomeLoja} slug={slug} />
+              )}
+
+              {activeTab === 1 && session && (
                 <ImportCard
                   session={session}
                   onSuccess={handleRefresh}
-                  onTabChange={setActiveTab}
+                  onTabChange={(tab) => setActiveTab(tab + 1)}
                   onToast={toast}
                 />
               )}
 
-              {activeTab === 1 && (
+              {activeTab === 2 && (
                 <div className="space-y-4">
                   <div className="flex justify-end">
                     <button
@@ -139,18 +144,18 @@ export default function AdminPage() {
                       categorias={categorias}
                       session={session}
                       onRefresh={handleRefresh}
-                      onAddFirst={() => setActiveTab(2)}
+                      onAddFirst={() => setActiveTab(3)}
                       onToast={toast}
                     />
                   )}
                 </div>
               )}
 
-              {activeTab === 2 && session && (
+              {activeTab === 3 && session && (
                 <ManualItemForm
                   session={session}
                   categoriasExistentes={categoriasExistentes}
-                  onSuccess={() => { handleRefresh(); setActiveTab(1); }}
+                  onSuccess={() => { handleRefresh(); setActiveTab(2); }}
                   onToast={toast}
                 />
               )}

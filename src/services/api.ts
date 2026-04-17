@@ -129,3 +129,25 @@ export async function atualizarLogo(
   });
   return data;
 }
+
+// ─── Dashboard ────────────────────────────────────────────────────────────
+
+export async function fetchDashboard(
+  merchantId: string,
+  token: string,
+): Promise<{
+  total_clientes: number;
+  clientes_capturados: number;
+  total_pedidos: number;
+  pedidos_diretos: number;
+  ltv_medio: number;
+  total_followups: number;
+  total_itens: number;
+  itens_ativos: number;
+}> {
+  const { data } = await api.post('/amx-cardapio-dashboard', {
+    merchant_id: merchantId,
+    token,
+  });
+  return data;
+}
