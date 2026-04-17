@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { AdminSession } from '@/types/admin';
 import { importarMarketplace, uploadPlanilha } from '@/services/api';
-import { gerarModeloExcel, parsePlanilha, montarPayloadPlanilha } from '@/services/excel';
+import { gerarModeloExcel, parsePlanilha } from '@/services/excel';
 
 interface ImportCardProps {
   session: AdminSession;
@@ -32,10 +32,10 @@ export function ImportCard({ session, onSuccess, onTabChange, onToast }: ImportC
     try {
       const res = await importarMarketplace(session.merchant_id, session.token);
       if (res.sucesso) {
-        onToast('success', `${res.itens_importados} itens importados com sucesso!`);
+        onToast('success', 'Importação concluída!', res.mensagem);
         onSuccess();
       } else {
-        onToast('error', 'Importação com erros', res.erros.join('; '));
+        onToast('error', 'Erro na importação', res.mensagem);
       }
     } catch {
       onToast('error', 'Erro ao importar', 'Verifique sua conexão e tente novamente.');
@@ -54,16 +54,14 @@ export function ImportCard({ session, onSuccess, onTabChange, onToast }: ImportC
     try {
       const parsed = await parsePlanilha(file);
       setUploadProgress(60);
-      const payload = montarPayloadPlanilha(parsed);
       setUploadProgress(80);
-      const res = await uploadPlanilha(session.merchant_id, session.token, payload);
+      const res = await uploadPlanilha(session.merchant_id, session.token, parsed);
       setUploadProgress(100);
       if (res.sucesso) {
-        onToast('success', `${res.itens_inseridos} itens importados!`,
-          res.erros.length > 0 ? `Avisos: ${res.erros.join('; ')}` : undefined);
+        onToast('success', 'Planilha importada!', res.mensagem);
         onSuccess();
       } else {
-        onToast('error', 'Erros no upload', res.erros.join('; '));
+        onToast('error', 'Erro no upload', res.mensagem);
       }
     } catch (err) {
       onToast('error', 'Erro ao processar planilha', err instanceof Error ? err.message : 'Tente novamente.');
