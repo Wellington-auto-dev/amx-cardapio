@@ -14,6 +14,58 @@ import { abrirWhatsApp } from '@/services/whatsapp';
 import type { Item } from '@/types/catalog';
 import type { OpcaoSelecionada } from '@/types/cart';
 
+// ─── Desktop category sidebar ──────────────────────────────────────────────
+
+function CategorySidebar({
+  categorias,
+  active,
+  onChange,
+}: {
+  categorias: string[];
+  active: string;
+  onChange: (cat: string) => void;
+}) {
+  return (
+    <aside className="hidden md:block w-44 flex-shrink-0">
+      <nav className="sticky top-36 space-y-0.5">
+        <p
+          className="text-[10px] font-700 uppercase tracking-widest px-3 pb-2"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          Categorias
+        </p>
+        {categorias.map((cat) => {
+          const isActive = active === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => onChange(cat)}
+              className="w-full text-left px-3 py-2 rounded-xl text-sm transition-all"
+              style={{
+                backgroundColor: isActive ? 'rgb(245 166 35 / 0.12)' : 'transparent',
+                color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                fontWeight: isActive ? 700 : 500,
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              {isActive && (
+                <span
+                  className="inline-block w-1 h-1 rounded-full mr-2 align-middle"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                />
+              )}
+              {cat}
+            </button>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
+
+// ─── Page ──────────────────────────────────────────────────────────────────
+
 export default function CatalogPage() {
   const { slug = '' } = useParams<{ slug: string }>();
   const { data: merchant, isLoading, isError } = useCatalog(slug);
@@ -84,7 +136,6 @@ export default function CatalogPage() {
     cart.clearCart();
   };
 
-  // Tela de erro
   if (isError) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--color-background)' }}>
@@ -116,7 +167,6 @@ export default function CatalogPage() {
           <HeaderSkeleton />
         ) : (
           <div className="flex flex-col items-center px-4 pt-5 pb-3 gap-2">
-            {/* Logo */}
             {merchant?.logo_url ? (
               <div
                 className="rounded-full overflow-hidden"
@@ -150,20 +200,32 @@ export default function CatalogPage() {
           </div>
         )}
 
-        {/* Tabs */}
-        {isLoading ? <TabsSkeleton /> : (
-          <CategoryTabs
+        {/* Tabs — mobile only */}
+        <div className="md:hidden">
+          {isLoading ? <TabsSkeleton /> : (
+            <CategoryTabs
+              categorias={categoriaNomes}
+              active={activeCategory}
+              onChange={handleTabChange}
+            />
+          )}
+        </div>
+      </header>
+
+      {/* Layout */}
+      <div className="max-w-6xl mx-auto flex gap-0 md:gap-5 p-0 md:p-4 md:pt-6">
+
+        {/* Desktop category sidebar */}
+        {!isLoading && categoriaNomes.length > 0 && (
+          <CategorySidebar
             categorias={categoriaNomes}
             active={activeCategory}
             onChange={handleTabChange}
           />
         )}
-      </header>
 
-      {/* Layout */}
-      <div className="max-w-5xl mx-auto flex gap-5 p-4">
-        {/* Itens do cardápio */}
-        <main className="flex-1 space-y-8 pb-28 md:pb-8">
+        {/* Items */}
+        <main className="flex-1 min-w-0 p-4 md:p-0 space-y-8 pb-28 md:pb-8">
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => <ItemCardSkeleton key={i} />)}
@@ -176,7 +238,6 @@ export default function CatalogPage() {
                 data-category={cat.nome}
                 aria-label={cat.nome}
               >
-                {/* Cabeçalho da categoria */}
                 <div className="flex items-center gap-3 mb-3">
                   <h2 className="text-base font-700" style={{ color: 'var(--color-text)' }}>
                     {cat.nome}
@@ -186,7 +247,6 @@ export default function CatalogPage() {
                     {cat.itens.length} {cat.itens.length === 1 ? 'item' : 'itens'}
                   </span>
                 </div>
-
                 <div className="space-y-3">
                   {cat.itens.map((item) => (
                     <ItemCard key={item.id} item={item} onAdd={setModalItem} />
@@ -197,7 +257,7 @@ export default function CatalogPage() {
           )}
         </main>
 
-        {/* Sidebar desktop */}
+        {/* Cart sidebar desktop */}
         <CartSidebar
           items={cart.items}
           total={cart.total}
@@ -207,14 +267,14 @@ export default function CatalogPage() {
         />
       </div>
 
-      {/* Botão flutuante mobile */}
+      {/* Mobile floating button */}
       <CartButton
         totalItems={cart.totalItems}
         total={cart.total}
         onClick={() => setCartOpen(true)}
       />
 
-      {/* Bottom sheet mobile */}
+      {/* Mobile bottom sheet */}
       <CartDrawer
         items={cart.items}
         total={cart.total}
@@ -225,7 +285,6 @@ export default function CatalogPage() {
         onFinalize={handleFinalize}
       />
 
-      {/* Modal de personalização */}
       <ItemModal
         item={modalItem}
         open={!!modalItem}

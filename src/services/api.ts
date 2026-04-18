@@ -114,6 +114,31 @@ export async function deletarItem(
   return data;
 }
 
+// ─── Editar item ──────────────────────────────────────────────────────────
+
+export async function editarItem(
+  merchantId: string,
+  token: string,
+  itemId: string,
+  campos: {
+    categoria?: string;
+    nome?: string;
+    descricao?: string;
+    preco?: number;
+    foto_url?: string;
+    disponivel?: boolean;
+  },
+): Promise<{ sucesso: boolean; mensagem: string }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'editar_item',
+    item_id: itemId,
+    ...campos,
+  });
+  return data;
+}
+
 // ─── Logo da loja ──────────────────────────────────────────────────────────
 
 export async function atualizarLogo(
