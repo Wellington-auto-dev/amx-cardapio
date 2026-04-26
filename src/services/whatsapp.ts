@@ -18,6 +18,7 @@ export function abrirWhatsApp(
   });
 
   const mensagem = formatWhatsappMessage(linhas, total);
-  const url = `${WA_BASE}/${whatsappNumero}?text=${encodeURIComponent(mensagem)}`;
+  const mensagemComTag = `\uFEFF${mensagem}`;
+  const url = `${WA_BASE}/${whatsappNumero}?text=${encodeURIComponent(mensagemComTag)}`;
   window.open(url, '_blank');
 }
