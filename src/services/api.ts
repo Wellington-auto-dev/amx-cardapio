@@ -176,3 +176,48 @@ export async function fetchDashboard(
   });
   return data;
 }
+
+// ─── Carteira ─────────────────────────────────────────────────────────────
+
+export async function fetchCarteira(
+  merchantId: string,
+  token: string,
+): Promise<{
+  indicadores: {
+    total_carteira: number;
+    total_qr_code: number;
+    total_espontaneo: number;
+    oportunidades_marketplace: number;
+    clientes_ativos: number;
+    clientes_em_risco: number;
+    clientes_inativos: number;
+    ltv_medio: string;
+    ltv_total: string;
+    gap_medio_carteira: number;
+    total_convertidos: number;
+    total_tentativas: number;
+    taxa_conversao: number;
+  };
+  clientes: {
+    id: string;
+    nome: string;
+    phone: string;
+    endereco: string;
+    cep: string;
+    segmento: string;
+    origem: string;
+    total_pedidos: number;
+    ultimo_pedido: string;
+    gap_medio: number | null;
+    ltv: string;
+    status_cliente: string;
+    dias_sem_pedido: number;
+    criado_em: string;
+  }[];
+}> {
+  const { data } = await api.post('/amx-cardapio-carteira', {
+    merchant_id: merchantId,
+    token,
+  });
+  return data;
+}

@@ -6,6 +6,7 @@ import { useCatalog } from '@/hooks/useCatalog';
 import { TokenGuard } from '@/components/admin/TokenGuard';
 import { StoreSettings } from '@/components/admin/StoreSettings';
 import { Dashboard } from '@/components/admin/Dashboard';
+import { Carteira } from '@/components/admin/Carteira';
 import { ImportCard } from '@/components/admin/ImportCard';
 import { ItemList } from '@/components/admin/ItemList';
 import { ManualItemForm } from '@/components/admin/ManualItemForm';
@@ -19,6 +20,14 @@ const NAV_ITEMS = [
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
         <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Carteira',
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
       </svg>
     ),
   },
@@ -268,15 +277,19 @@ export default function AdminPage() {
                 )}
 
                 {activeTab === 1 && session && (
+                  <Carteira session={session} />
+                )}
+
+                {activeTab === 2 && session && (
                   <ImportCard
                     session={session}
                     onSuccess={handleRefresh}
-                    onTabChange={(tab) => setActiveTab(tab + 1)}
+                    onTabChange={(tab) => setActiveTab(tab + 2)}
                     onToast={toast}
                   />
                 )}
 
-                {activeTab === 2 && (
+                {activeTab === 3 && (
                   <div className="space-y-4">
                     <div className="flex justify-end">
                       <button
@@ -295,18 +308,18 @@ export default function AdminPage() {
                         categorias={categorias}
                         session={session}
                         onRefresh={handleRefresh}
-                        onAddFirst={() => setActiveTab(3)}
+                        onAddFirst={() => setActiveTab(4)}
                         onToast={toast}
                       />
                     )}
                   </div>
                 )}
 
-                {activeTab === 3 && session && (
+                {activeTab === 4 && session && (
                   <ManualItemForm
                     session={session}
                     categoriasExistentes={categoriasExistentes}
-                    onSuccess={() => { handleRefresh(); setActiveTab(2); }}
+                    onSuccess={() => { handleRefresh(); setActiveTab(3); }}
                     onToast={toast}
                   />
                 )}
