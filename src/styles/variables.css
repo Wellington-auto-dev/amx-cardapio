@@ -43,3 +43,18 @@
   --shadow-lg: 0 10px 32px 0 rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.5);
   --shadow-glow: 0 0 20px rgb(245 166 35 / 0.25);
 }
+
+[data-theme="light"] {
+  --color-background: #F5F5F5;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F0F0F0;
+  --color-surface-3: #E8E8E8;
+  --color-border: #E0E0E0;
+  --color-text: #1A1A1A;
+  --color-text-secondary: #4A4A4A;
+  --color-text-muted: #8A8A8A;
+  --color-primary: #F5A623;
+  --color-primary-dark: #E09510;
+  --color-success: #10B981;
+  --color-whatsapp: #25D366;
+}

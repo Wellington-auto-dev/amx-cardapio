@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useToast } from '@/hooks/useToast';
@@ -205,8 +205,16 @@ export default function AdminPage() {
 
   const [activeTab, setActiveTab] = useState(0);
   const [logoUrl, setLogoUrl] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);         // mobile overlay
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop collapse
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [tema, setTema] = useState<'dark' | 'light'>(
+    () => (localStorage.getItem('amx-tema') as 'dark' | 'light') || 'dark',
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', tema);
+    localStorage.setItem('amx-tema', tema);
+  }, [tema]);
 
   const currentLogo = logoUrl || merchant?.logo_url || '';
   const nomeLoja = merchant?.nome_loja ?? '';
@@ -293,6 +301,43 @@ export default function AdminPage() {
             logoInitial={logoInitial}
             collapsed={sidebarCollapsed}
           />
+
+          {/* Theme toggle footer */}
+          <div
+            className="flex-shrink-0 flex items-center px-3 py-3"
+            style={{
+              borderTop: '1px solid var(--color-border)',
+              justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+              gap: sidebarCollapsed ? 0 : 10,
+            }}
+          >
+            <button
+              onClick={() => setTema((t) => (t === 'dark' ? 'light' : 'dark'))}
+              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity hover:opacity-60"
+              style={{
+                backgroundColor: 'var(--color-surface-2)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-muted)',
+                cursor: 'pointer',
+              }}
+              aria-label={tema === 'dark' ? 'Tema claro' : 'Tema escuro'}
+            >
+              {tema === 'dark' ? (
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+              )}
+            </button>
+            {!sidebarCollapsed && (
+              <span className="text-xs font-500" style={{ color: 'var(--color-text-muted)' }}>
+                {tema === 'dark' ? 'Tema Claro' : 'Tema Escuro'}
+              </span>
+            )}
+          </div>
         </aside>
 
         {/* Main area */}
@@ -337,6 +382,22 @@ export default function AdminPage() {
             <span className="text-xs font-500 flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
               {NAV_ITEMS[activeTab].label}
             </span>
+            <button
+              onClick={() => setTema((t) => (t === 'dark' ? 'light' : 'dark'))}
+              className="p-1.5 rounded-lg flex-shrink-0 transition-opacity hover:opacity-70"
+              style={{ color: 'var(--color-text-muted)', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+              aria-label={tema === 'dark' ? 'Tema claro' : 'Tema escuro'}
+            >
+              {tema === 'dark' ? (
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+              )}
+            </button>
           </header>
 
           {/* Page content */}
