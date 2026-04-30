@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AdminSession } from '@/types/admin';
 import { fetchDashboard, fetchCarteira } from '@/services/api';
 import { formatCurrency } from '@/utils/formatCurrency';
@@ -107,7 +107,8 @@ function DashboardSkeleton() {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 md:col-span-5 rounded-2xl p-6 space-y-4" style={card}>
           <Sk h={12} w={160} />
-          <div className="flex gap-4"><Sk h={176} w={176} /><div className="flex-1 space-y-4"><Sk h={40} /><Sk h={40} /><Sk h={40} /></div></div>
+          <div className="flex justify-center"><Sk h={160} w={160} /></div>
+          <div className="space-y-3"><Sk h={40} /><Sk h={40} /><Sk h={40} /></div>
         </div>
         <div className="col-span-12 md:col-span-7 rounded-2xl p-6 space-y-6" style={card}>
           <Sk h={12} w={140} />
@@ -124,9 +125,9 @@ function DashboardSkeleton() {
 // ─── Metric card ───────────────────────────────────────────────────────────
 
 function MetricCard({
-  label, value, sub, icon, accent,
+  label, value, sub, icon,
 }: {
-  label: string; value: string | number; sub?: string; icon: React.ReactNode; accent: string;
+  label: string; value: string | number; sub?: string; icon: React.ReactNode;
 }) {
   return (
     <div className="rounded-2xl p-6 flex flex-col gap-4" style={card}>
@@ -134,9 +135,9 @@ function MetricCard({
         <span className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>{label}</span>
         <div
           className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: `${accent}1a` }}
+          style={{ backgroundColor: 'rgb(245 166 35 / 0.12)' }}
         >
-          <span style={{ color: accent }}>{icon}</span>
+          <span style={{ color: 'var(--color-primary)' }}>{icon}</span>
         </div>
       </div>
       <div>
@@ -150,65 +151,119 @@ function MetricCard({
 // ─── Donut chart ───────────────────────────────────────────────────────────
 
 function DonutChart({ qr, espontaneo, marketplace }: { qr: number; espontaneo: number; marketplace: number }) {
+  const [tip, setTip] = useState<{ x: number; y: number; label: string; value: number; pct: number } | null>(null);
+
   const cx = 100; const cy = 100; const ro = 70; const ri = 48;
 
   const raw = [
-    { label: 'QR Code',    value: qr,          color: '#F5A623' },
-    { label: 'Espontâneo', value: espontaneo,   color: '#10B981' },
-    { label: 'Marketplace',value: marketplace,  color: '#6B7280' },
+    { label: 'QR Code',     value: qr,          color: '#F5A623' },
+    { label: 'Espontâneo',  value: espontaneo,  color: '#10B981' },
+    { label: 'Marketplace', value: marketplace, color: '#6B7280' },
   ];
   const total = raw.reduce((s, d) => s + d.value, 0);
 
-  const segments: { label: string; value: number; color: string; start: number; end: number }[] = [];
+  const segments: { label: string; value: number; color: string; start: number; end: number; pct: number }[] = [];
   let angle = 0;
   raw.forEach((d, i) => {
     if (d.value <= 0) return;
     const sweep = i === raw.length - 1 ? 360 - angle : (d.value / Math.max(total, 1)) * 360;
-    segments.push({ ...d, start: angle, end: angle + sweep });
+    const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
+    segments.push({ ...d, start: angle, end: angle + sweep, pct });
     angle += sweep;
   });
 
   return (
-    <div className="rounded-2xl p-6" style={card}>
+    <div className="rounded-2xl p-6" style={card} onMouseLeave={() => setTip(null)}>
       <h3 className="text-xs font-600 mb-6" style={{ color: 'var(--color-text-secondary)' }}>
         Distribuição da Carteira
       </h3>
-      <div className="flex items-center gap-6">
-        <svg viewBox="0 0 200 200" className="w-44 h-44 flex-shrink-0">
+
+      {/* Column layout: SVG centered, legend below — prevents text from being clipped */}
+      <div className="flex flex-col items-center gap-5">
+        <svg
+          viewBox="0 0 200 200"
+          className="w-40 h-40 flex-shrink-0"
+          onMouseLeave={() => setTip(null)}
+        >
+          {/* Transparent catch-all clears tooltip when over empty areas */}
+          <rect
+            x={0} y={0} width={200} height={200} fill="transparent"
+            onMouseMove={() => setTip(null)}
+          />
           {total === 0 ? (
             <circle cx={cx} cy={cy} r={(ro + ri) / 2} fill="none" stroke="var(--color-border)" strokeWidth={ro - ri} />
           ) : (
             segments.map((s) => (
-              <path key={s.label} d={donutPath(cx, cy, ro, ri, s.start, s.end)} fill={s.color} />
+              <path
+                key={s.label}
+                d={donutPath(cx, cy, ro, ri, s.start, s.end)}
+                fill={s.color}
+                style={{ cursor: 'pointer' }}
+                onMouseMove={(e) => {
+                  e.stopPropagation();
+                  setTip({ x: e.clientX, y: e.clientY, label: s.label, value: s.value, pct: s.pct });
+                }}
+              />
             ))
           )}
           <text x={cx} y={cy - 8} textAnchor="middle" fontSize="20" fontWeight="700" fill="var(--color-text)">{total}</text>
           <text x={cx} y={cy + 14} textAnchor="middle" fontSize="11" fill="var(--color-text-muted)">clientes</text>
         </svg>
 
-        <div className="flex-1 space-y-5">
+        {/* Legend — full card width avoids clipping */}
+        <div className="w-full space-y-4">
           {raw.map((d) => {
             const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
             return (
               <div key={d.label}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
                     <span className="text-xs font-500" style={{ color: 'var(--color-text-secondary)' }}>{d.label}</span>
                   </div>
-                  <div className="flex items-center gap-2 ml-2">
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
                     <span className="text-sm font-700" style={{ color: 'var(--color-text)' }}>{d.value}</span>
-                    <span className="text-[10px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{pct}%</span>
+                    <span
+                      className="text-[10px] tabular-nums text-right"
+                      style={{ color: 'var(--color-text-muted)', minWidth: 28 }}
+                    >
+                      {pct}%
+                    </span>
                   </div>
                 </div>
                 <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
-                  <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: d.color }} />
+                  <div
+                    className="h-1.5 rounded-full transition-all duration-700"
+                    style={{ width: `${pct}%`, backgroundColor: d.color }}
+                  />
                 </div>
               </div>
             );
           })}
         </div>
       </div>
+
+      {tip && (
+        <div
+          style={{
+            position: 'fixed',
+            left: tip.x + 14,
+            top: tip.y - 52,
+            zIndex: 50,
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 10,
+            padding: '8px 12px',
+            pointerEvents: 'none',
+            boxShadow: '0 4px 16px rgb(0 0 0 / 0.45)',
+          }}
+        >
+          <p className="text-xs font-700" style={{ color: 'var(--color-text)' }}>{tip.label}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-secondary)' }}>
+            {tip.value} clientes · {tip.pct}%
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -218,9 +273,9 @@ function DonutChart({ qr, espontaneo, marketplace }: { qr: number; espontaneo: n
 function HealthCard({ ativos, emRisco, inativos }: { ativos: number; emRisco: number; inativos: number }) {
   const total = ativos + emRisco + inativos;
   const bars = [
-    { label: 'Ativos',    value: ativos,   color: '#10B981' },
-    { label: 'Em Risco',  value: emRisco,  color: '#F59E0B' },
-    { label: 'Inativos',  value: inativos, color: '#EF4444' },
+    { label: 'Ativos',   value: ativos,   color: '#10B981' },
+    { label: 'Em Risco', value: emRisco,  color: '#F59E0B' },
+    { label: 'Inativos', value: inativos, color: '#EF4444' },
   ];
 
   return (
@@ -249,7 +304,11 @@ function HealthCard({ ativos, emRisco, inativos }: { ativos: number; emRisco: nu
               <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
                 <div
                   className="h-2.5 rounded-full transition-all duration-700"
-                  style={{ width: `${pct}%`, backgroundColor: b.color }}
+                  style={{
+                    width: `${pct}%`,
+                    minWidth: pct > 0 ? undefined : '4px',
+                    backgroundColor: b.color,
+                  }}
                 />
               </div>
             </div>
@@ -263,6 +322,10 @@ function HealthCard({ ativos, emRisco, inativos }: { ativos: number; emRisco: nu
 // ─── Line chart ────────────────────────────────────────────────────────────
 
 function LineChart({ evolucao }: { evolucao: EvolucaoPoint[] }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const [tipPos, setTipPos] = useState({ x: 0, y: 0 });
+  const svgRef = useRef<SVGSVGElement>(null);
+
   const L = 44; const R = 12; const T = 20; const B = 38;
   const VW = 800; const VH = 220;
   const cW = VW - L - R;
@@ -312,8 +375,26 @@ function LineChart({ evolucao }: { evolucao: EvolucaoPoint[] }) {
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 
+  const fmtDateLong = (iso: string) =>
+    new Date(iso).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const svgX = ((e.clientX - rect.left) / rect.width) * VW;
+    let best = 0;
+    let bestD = Infinity;
+    for (let i = 0; i < n; i++) {
+      const dist = Math.abs(xOf(i) - svgX);
+      if (dist < bestD) { bestD = dist; best = i; }
+    }
+    setHoverIdx(best);
+    setTipPos({ x: e.clientX, y: e.clientY });
+  };
+
   return (
-    <div className="rounded-2xl p-6" style={card}>
+    <div className="rounded-2xl p-6" style={card} onMouseLeave={() => setHoverIdx(null)}>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>
           Evolução de Capturas — Últimos 30 dias
@@ -330,7 +411,14 @@ function LineChart({ evolucao }: { evolucao: EvolucaoPoint[] }) {
         </div>
       </div>
 
-      <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full" style={{ display: 'block', overflow: 'visible' }}>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${VW} ${VH}`}
+        className="w-full"
+        style={{ display: 'block', overflow: 'visible', cursor: 'crosshair' }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoverIdx(null)}
+      >
         <defs>
           <linearGradient id="lg-qr" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stopColor="#F5A623" stopOpacity="0.28" />
@@ -367,7 +455,71 @@ function LineChart({ evolucao }: { evolucao: EvolucaoPoint[] }) {
         {/* Lines */}
         <path d={qrLine}  fill="none" stroke="#F5A623" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         <path d={espLine} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Hover crosshair + dots */}
+        {hoverIdx !== null && (
+          <g>
+            <line
+              x1={xOf(hoverIdx)} y1={T}
+              x2={xOf(hoverIdx)} y2={botY}
+              stroke="var(--color-text-muted)"
+              strokeWidth="1"
+              strokeDasharray="4 3"
+              strokeOpacity="0.5"
+            />
+            <circle
+              cx={qrPts[hoverIdx].x} cy={qrPts[hoverIdx].y} r={4}
+              fill="#F5A623" stroke="var(--color-surface)" strokeWidth={2.5}
+            />
+            <circle
+              cx={espPts[hoverIdx].x} cy={espPts[hoverIdx].y} r={4}
+              fill="#10B981" stroke="var(--color-surface)" strokeWidth={2.5}
+            />
+          </g>
+        )}
       </svg>
+
+      {hoverIdx !== null && (
+        <div
+          style={{
+            position: 'fixed',
+            left: tipPos.x + 14,
+            top: tipPos.y - 92,
+            zIndex: 50,
+            backgroundColor: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 10,
+            padding: '10px 14px',
+            pointerEvents: 'none',
+            boxShadow: '0 4px 20px rgb(0 0 0 / 0.5)',
+            minWidth: 148,
+          }}
+        >
+          <p className="text-xs font-700 mb-2.5" style={{ color: 'var(--color-text)' }}>
+            {fmtDateLong(evolucao[hoverIdx].data)}
+          </p>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: '#F5A623' }} />
+              <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                QR Code{' '}
+                <span className="font-700" style={{ color: 'var(--color-text)' }}>
+                  {evolucao[hoverIdx].qr_code}
+                </span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: '#10B981' }} />
+              <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                Espontâneo{' '}
+                <span className="font-700" style={{ color: 'var(--color-text)' }}>
+                  {evolucao[hoverIdx].espontaneo}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -375,8 +527,8 @@ function LineChart({ evolucao }: { evolucao: EvolucaoPoint[] }) {
 // ─── Bar chart ─────────────────────────────────────────────────────────────
 
 function BarChart({ ifood, direto }: { ifood: number; direto: number }) {
-  const total   = ifood + direto;
-  const maxV    = Math.max(ifood, direto, 1);
+  const total = ifood + direto;
+  const maxV  = Math.max(ifood, direto, 1);
   const H = 100; const W = 80;
 
   const bars = [
@@ -515,7 +667,7 @@ function formatDate() {
 // ─── Main component ────────────────────────────────────────────────────────
 
 export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
-  const [dash, setDash]       = useState<DashData | null>(null);
+  const [dash, setDash]         = useState<DashData | null>(null);
   const [carteira, setCarteira] = useState<CarteiraInd | null>(null);
   const [evolucao, setEvolucao] = useState<EvolucaoPoint[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -583,7 +735,6 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
           label="Clientes Capturados"
           value={dash.clientes_capturados}
           sub={`${taxaCaptura}% de Conversão`}
-          accent="#F5A623"
           icon={
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -594,7 +745,6 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
           label="Pedidos Diretos"
           value={dash.pedidos_diretos}
           sub={`${taxaDireta}% do total`}
-          accent="#10B981"
           icon={
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z" />
@@ -605,7 +755,6 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
           label="LTV Médio"
           value={formatCurrency(Number(dash.ltv_medio))}
           sub="por cliente capturado"
-          accent="#60A5FA"
           icon={
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
@@ -617,7 +766,6 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
           label="Oportunidades iFood"
           value={carteira?.oportunidades_marketplace ?? 0}
           sub="clientes não capturados"
-          accent="#C084FC"
           icon={
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
