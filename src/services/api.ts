@@ -214,6 +214,12 @@ export async function fetchCarteira(
     dias_sem_pedido: number;
     criado_em: string;
   }[];
+  evolucao?: {
+    data: string;
+    qr_code: number;
+    espontaneo: number;
+    total: number;
+  }[];
 }> {
   const { data } = await api.post('/amx-cardapio-carteira', {
     merchant_id: merchantId,

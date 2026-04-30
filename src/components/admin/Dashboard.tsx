@@ -32,6 +32,13 @@ interface CarteiraInd {
   ltv_total: string;
 }
 
+interface EvolucaoPoint {
+  data: string;
+  qr_code: number;
+  espontaneo: number;
+  total: number;
+}
+
 // ─── SVG helpers ───────────────────────────────────────────────────────────
 
 function polar(r: number, deg: number, cx: number, cy: number) {
@@ -48,6 +55,19 @@ function donutPath(cx: number, cy: number, ro: number, ri: number, a0: number, a
   const p3 = polar(ri, safe, cx, cy);
   const p4 = polar(ri, a0, cx, cy);
   return `M${f(p1.x)},${f(p1.y)} A${ro},${ro},0,${large},1,${f(p2.x)},${f(p2.y)} L${f(p3.x)},${f(p3.y)} A${ri},${ri},0,${large},0,${f(p4.x)},${f(p4.y)} Z`;
+}
+
+function smoothLine(pts: { x: number; y: number }[]): string {
+  if (pts.length === 0) return '';
+  if (pts.length === 1) return `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    const p0 = pts[i - 1];
+    const p1 = pts[i];
+    const mx = ((p0.x + p1.x) / 2).toFixed(1);
+    d += ` C ${mx} ${p0.y.toFixed(1)} ${mx} ${p1.y.toFixed(1)} ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+  }
+  return d;
 }
 
 // ─── Shared style ──────────────────────────────────────────────────────────
@@ -71,23 +91,32 @@ function Sk({ h = 16, w = '100%' }: { h?: number; w?: number | string }) {
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-start justify-between">
-        <div className="space-y-1.5"><Sk h={20} w={220} /><Sk h={13} w={160} /></div>
-        <div className="flex gap-2"><Sk h={28} w={60} /><Sk h={28} w={70} /><Sk h={28} w={70} /></div>
+        <div className="space-y-2"><Sk h={20} w={220} /><Sk h={13} w={160} /></div>
+        <div className="flex gap-2"><Sk h={30} w={64} /><Sk h={30} w={74} /><Sk h={30} w={74} /></div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[1,2,3,4].map(i => (
-          <div key={i} className="rounded-2xl p-4 space-y-3" style={card}>
-            <div className="flex justify-between"><Sk h={12} w={80} /><Sk h={28} w={28} /></div>
-            <Sk h={30} w={70} /><Sk h={12} w={100} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-2xl p-6 space-y-4" style={card}>
+            <div className="flex justify-between items-start"><Sk h={12} w={90} /><Sk h={32} w={32} /></div>
+            <Sk h={34} w={80} /><Sk h={12} w={110} />
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {[1,2,3].map(i => <div key={i} className="rounded-2xl p-4 space-y-3" style={card}><Sk h={12} w={120} /><Sk h={80} /><Sk h={12} /></div>)}
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-12 md:col-span-5 rounded-2xl p-6 space-y-4" style={card}>
+          <Sk h={12} w={160} />
+          <div className="flex gap-4"><Sk h={176} w={176} /><div className="flex-1 space-y-4"><Sk h={40} /><Sk h={40} /><Sk h={40} /></div></div>
+        </div>
+        <div className="col-span-12 md:col-span-7 rounded-2xl p-6 space-y-6" style={card}>
+          <Sk h={12} w={140} />
+          {[1, 2, 3].map((i) => <div key={i} className="space-y-2"><Sk h={12} /><Sk h={10} /></div>)}
+        </div>
       </div>
-      <div className="rounded-2xl p-4 space-y-3" style={card}><Sk h={12} w={120} /><Sk h={36} /></div>
+      <div className="rounded-2xl p-6 space-y-4" style={card}><Sk h={12} w={240} /><Sk h={200} /></div>
+      <div className="rounded-2xl p-6 space-y-4" style={card}><Sk h={12} w={120} /><Sk h={120} /></div>
+      <div className="rounded-2xl p-6 space-y-3" style={card}><Sk h={12} w={120} /><Sk h={40} /></div>
     </div>
   );
 }
@@ -100,19 +129,19 @@ function MetricCard({
   label: string; value: string | number; sub?: string; icon: React.ReactNode; accent: string;
 }) {
   return (
-    <div className="rounded-2xl p-4 flex flex-col gap-2.5" style={card}>
+    <div className="rounded-2xl p-6 flex flex-col gap-4" style={card}>
       <div className="flex items-center justify-between">
         <span className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>{label}</span>
         <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: `${accent}1a` }}
         >
           <span style={{ color: accent }}>{icon}</span>
         </div>
       </div>
       <div>
-        <p className="text-2xl font-700 leading-none" style={{ color: 'var(--color-text)' }}>{value}</p>
-        {sub && <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{sub}</p>}
+        <p className="text-3xl font-700 leading-none" style={{ color: 'var(--color-text)' }}>{value}</p>
+        {sub && <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>{sub}</p>}
       </div>
     </div>
   );
@@ -121,12 +150,12 @@ function MetricCard({
 // ─── Donut chart ───────────────────────────────────────────────────────────
 
 function DonutChart({ qr, espontaneo, marketplace }: { qr: number; espontaneo: number; marketplace: number }) {
-  const cx = 60; const cy = 60; const ro = 52; const ri = 34;
+  const cx = 100; const cy = 100; const ro = 70; const ri = 48;
 
   const raw = [
-    { label: 'QR Code', value: qr, color: 'var(--color-primary)' },
-    { label: 'Espontaneo', value: espontaneo, color: '#10B981' },
-    { label: 'Marketplace', value: marketplace, color: '#60A5FA' },
+    { label: 'QR Code',    value: qr,          color: '#F5A623' },
+    { label: 'Espontâneo', value: espontaneo,   color: '#10B981' },
+    { label: 'Marketplace',value: marketplace,  color: '#6B7280' },
   ];
   const total = raw.reduce((s, d) => s + d.value, 0);
 
@@ -140,12 +169,12 @@ function DonutChart({ qr, espontaneo, marketplace }: { qr: number; espontaneo: n
   });
 
   return (
-    <div className="rounded-2xl p-4" style={card}>
-      <h3 className="text-xs font-600 mb-4" style={{ color: 'var(--color-text-secondary)' }}>
-        Distribuicao da Carteira
+    <div className="rounded-2xl p-6" style={card}>
+      <h3 className="text-xs font-600 mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+        Distribuição da Carteira
       </h3>
-      <div className="flex items-center gap-4">
-        <svg viewBox="0 0 120 120" className="w-28 h-28 flex-shrink-0">
+      <div className="flex items-center gap-6">
+        <svg viewBox="0 0 200 200" className="w-44 h-44 flex-shrink-0">
           {total === 0 ? (
             <circle cx={cx} cy={cy} r={(ro + ri) / 2} fill="none" stroke="var(--color-border)" strokeWidth={ro - ri} />
           ) : (
@@ -153,86 +182,31 @@ function DonutChart({ qr, espontaneo, marketplace }: { qr: number; espontaneo: n
               <path key={s.label} d={donutPath(cx, cy, ro, ri, s.start, s.end)} fill={s.color} />
             ))
           )}
-          <text x={cx} y={cy - 4} textAnchor="middle" fontSize="14" fontWeight="700" fill="var(--color-text)">{total}</text>
-          <text x={cx} y={cy + 11} textAnchor="middle" fontSize="8" fill="var(--color-text-muted)">clientes</text>
+          <text x={cx} y={cy - 8} textAnchor="middle" fontSize="20" fontWeight="700" fill="var(--color-text)">{total}</text>
+          <text x={cx} y={cy + 14} textAnchor="middle" fontSize="11" fill="var(--color-text-muted)">clientes</text>
         </svg>
-        <div className="flex-1 space-y-3">
+
+        <div className="flex-1 space-y-5">
           {raw.map((d) => {
             const pct = total > 0 ? Math.round((d.value / total) * 100) : 0;
             return (
               <div key={d.label}>
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-                    <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{d.label}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                    <span className="text-xs font-500" style={{ color: 'var(--color-text-secondary)' }}>{d.label}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-700" style={{ color: 'var(--color-text)' }}>{d.value}</span>
-                    <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{pct}%</span>
+                  <div className="flex items-center gap-2 ml-2">
+                    <span className="text-sm font-700" style={{ color: 'var(--color-text)' }}>{d.value}</span>
+                    <span className="text-[10px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{pct}%</span>
                   </div>
                 </div>
-                <div className="w-full h-1 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
-                  <div className="h-1 rounded-full" style={{ width: `${pct}%`, backgroundColor: d.color }} />
+                <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
+                  <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: d.color }} />
                 </div>
               </div>
             );
           })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Bar chart ─────────────────────────────────────────────────────────────
-
-function BarChart({ ifood, direto }: { ifood: number; direto: number }) {
-  const total = ifood + direto;
-  const maxV = Math.max(ifood, direto, 1);
-  const H = 72; const W = 52;
-
-  const bars = [
-    { label: 'Marketplace', value: ifood, color: '#60A5FA' },
-    { label: 'Direto', value: direto, color: 'var(--color-primary)' },
-  ];
-
-  const pctDireto = total > 0 ? Math.round((direto / total) * 100) : 0;
-
-  return (
-    <div className="rounded-2xl p-4" style={card}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>Canal de Pedidos</h3>
-        <span
-          className="text-xs font-700 px-2 py-0.5 rounded-full"
-          style={{ backgroundColor: 'rgb(245 166 35 / 0.12)', color: 'var(--color-primary)' }}
-        >
-          {pctDireto}% direto
-        </span>
-      </div>
-      <div className="flex items-end justify-center gap-6 mb-3" style={{ height: H + 24 }}>
-        {bars.map((b) => {
-          const barH = maxV > 0 ? Math.max(6, Math.round((b.value / maxV) * H)) : 6;
-          return (
-            <div key={b.label} className="flex flex-col items-center gap-1" style={{ width: W }}>
-              <span className="text-sm font-700" style={{ color: 'var(--color-text)' }}>{b.value}</span>
-              <div
-                className="w-full rounded-t-lg transition-all duration-700"
-                style={{ height: barH, backgroundColor: b.color }}
-              />
-              <span className="text-[10px] text-center leading-tight" style={{ color: 'var(--color-text-muted)' }}>{b.label}</span>
-            </div>
-          );
-        })}
-      </div>
-      <div className="space-y-1">
-        <div className="flex justify-between text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-          <span>Marketplace</span>
-          <span>Direto</span>
-        </div>
-        <div className="w-full rounded-full h-1.5" style={{ backgroundColor: 'var(--color-border)' }}>
-          <div
-            className="h-1.5 rounded-full transition-all duration-700"
-            style={{ width: total > 0 ? `${pctDireto}%` : '0%', backgroundColor: 'var(--color-primary)' }}
-          />
         </div>
       </div>
     </div>
@@ -244,38 +218,213 @@ function BarChart({ ifood, direto }: { ifood: number; direto: number }) {
 function HealthCard({ ativos, emRisco, inativos }: { ativos: number; emRisco: number; inativos: number }) {
   const total = ativos + emRisco + inativos;
   const bars = [
-    { label: 'Ativos', value: ativos, color: '#10B981' },
-    { label: 'Em Risco', value: emRisco, color: '#F59E0B' },
-    { label: 'Inativos', value: inativos, color: '#EF4444' },
+    { label: 'Ativos',    value: ativos,   color: '#10B981' },
+    { label: 'Em Risco',  value: emRisco,  color: '#F59E0B' },
+    { label: 'Inativos',  value: inativos, color: '#EF4444' },
   ];
 
   return (
-    <div className="rounded-2xl p-4 space-y-4" style={card}>
-      <h3 className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>Saude da Carteira</h3>
-      <div className="space-y-4">
+    <div className="rounded-2xl p-6 space-y-6" style={card}>
+      <h3 className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>Saúde da Carteira</h3>
+      <div className="space-y-7">
         {bars.map((b) => {
           const pct = total > 0 ? (b.value / total) * 100 : 0;
           return (
-            <div key={b.label} className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: b.color }} />
-                  <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>{b.label}</span>
+            <div key={b.label}>
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: b.color }} />
+                  <span className="text-sm font-500" style={{ color: 'var(--color-text-secondary)' }}>{b.label}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-700" style={{ color: 'var(--color-text)' }}>{b.value}</span>
-                  <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{pct.toFixed(0)}%</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl font-700" style={{ color: 'var(--color-text)' }}>{b.value}</span>
+                  <span
+                    className="text-xs font-600 px-2 py-0.5 rounded-full tabular-nums"
+                    style={{ backgroundColor: `${b.color}1a`, color: b.color }}
+                  >
+                    {pct.toFixed(0)}%
+                  </span>
                 </div>
               </div>
-              <div className="w-full h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
+              <div className="w-full h-2.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
                 <div
-                  className="h-1.5 rounded-full transition-all duration-700"
+                  className="h-2.5 rounded-full transition-all duration-700"
                   style={{ width: `${pct}%`, backgroundColor: b.color }}
                 />
               </div>
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Line chart ────────────────────────────────────────────────────────────
+
+function LineChart({ evolucao }: { evolucao: EvolucaoPoint[] }) {
+  const L = 44; const R = 12; const T = 20; const B = 38;
+  const VW = 800; const VH = 220;
+  const cW = VW - L - R;
+  const cH = VH - T - B;
+  const botY = T + cH;
+  const n = evolucao.length;
+
+  const allZero = n === 0 || evolucao.every((p) => p.qr_code === 0 && p.espontaneo === 0);
+
+  if (allZero) {
+    return (
+      <div className="rounded-2xl p-6" style={card}>
+        <h3 className="text-xs font-600 mb-8" style={{ color: 'var(--color-text-secondary)' }}>
+          Evolução de Capturas — Últimos 30 dias
+        </h3>
+        <div className="flex flex-col items-center justify-center gap-3 py-10">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-10 h-10 opacity-15" style={{ color: 'var(--color-text-secondary)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+          <p className="text-sm font-600" style={{ color: 'var(--color-text-secondary)' }}>Aguardando primeiras capturas</p>
+          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            Os dados aparecerão aqui conforme clientes forem capturados
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const maxV = Math.max(...evolucao.flatMap((p) => [p.qr_code, p.espontaneo]), 1);
+
+  const xOf = (i: number) => L + (n > 1 ? (i / (n - 1)) * cW : cW / 2);
+  const yOf = (v: number) => T + cH - (v / maxV) * cH;
+
+  const qrPts  = evolucao.map((p, i) => ({ x: xOf(i), y: yOf(p.qr_code)   }));
+  const espPts = evolucao.map((p, i) => ({ x: xOf(i), y: yOf(p.espontaneo) }));
+
+  const qrLine  = smoothLine(qrPts);
+  const espLine = smoothLine(espPts);
+  const qrArea  = `${qrLine} L ${qrPts[n - 1].x.toFixed(1)},${botY} L ${L},${botY} Z`;
+  const espArea = `${espLine} L ${espPts[n - 1].x.toFixed(1)},${botY} L ${L},${botY} Z`;
+
+  const xIdxs = Array.from({ length: 6 }, (_, i) => Math.round((i * (n - 1)) / 5));
+
+  const step = maxV / 4;
+  const yTicks = [0, step, step * 2, step * 3, maxV].map(Math.round);
+
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+  return (
+    <div className="rounded-2xl p-6" style={card}>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>
+          Evolução de Capturas — Últimos 30 dias
+        </h3>
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-1.5">
+            <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: '#F5A623' }} />
+            <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>QR Code</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-5 h-0.5 rounded-full" style={{ backgroundColor: '#10B981' }} />
+            <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>Espontâneo</span>
+          </div>
+        </div>
+      </div>
+
+      <svg viewBox={`0 0 ${VW} ${VH}`} className="w-full" style={{ display: 'block', overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="lg-qr" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#F5A623" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="#F5A623" stopOpacity="0"    />
+          </linearGradient>
+          <linearGradient id="lg-esp" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#10B981" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="#10B981" stopOpacity="0"    />
+          </linearGradient>
+        </defs>
+
+        {/* Y grid + labels */}
+        {yTicks.map((tick, ti) => {
+          const y = yOf(tick);
+          return (
+            <g key={ti}>
+              <line x1={L} y1={y} x2={VW - R} y2={y} stroke="var(--color-border)" strokeWidth="0.5" />
+              <text x={L - 8} y={y + 4} textAnchor="end" fontSize="10" fill="var(--color-text-muted)">{tick}</text>
+            </g>
+          );
+        })}
+
+        {/* X labels */}
+        {xIdxs.map((idx) => (
+          <text key={idx} x={xOf(idx)} y={botY + 22} textAnchor="middle" fontSize="10" fill="var(--color-text-muted)">
+            {fmtDate(evolucao[idx].data)}
+          </text>
+        ))}
+
+        {/* Area fills */}
+        <path d={qrArea}  fill="url(#lg-qr)"  />
+        <path d={espArea} fill="url(#lg-esp)" />
+
+        {/* Lines */}
+        <path d={qrLine}  fill="none" stroke="#F5A623" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={espLine} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+}
+
+// ─── Bar chart ─────────────────────────────────────────────────────────────
+
+function BarChart({ ifood, direto }: { ifood: number; direto: number }) {
+  const total   = ifood + direto;
+  const maxV    = Math.max(ifood, direto, 1);
+  const H = 100; const W = 80;
+
+  const bars = [
+    { label: 'Marketplace', value: ifood,  color: '#6B7280'              },
+    { label: 'Direto',      value: direto, color: 'var(--color-primary)' },
+  ];
+
+  const pctDireto = total > 0 ? Math.round((direto / total) * 100) : 0;
+
+  return (
+    <div className="rounded-2xl p-6" style={card}>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>Canal de Pedidos</h3>
+        <span
+          className="text-xs font-700 px-2.5 py-1 rounded-full"
+          style={{ backgroundColor: 'rgb(245 166 35 / 0.12)', color: 'var(--color-primary)' }}
+        >
+          {pctDireto}% direto
+        </span>
+      </div>
+
+      <div className="flex items-end justify-center gap-10 mb-5" style={{ height: H + 28 }}>
+        {bars.map((b) => {
+          const barH = maxV > 0 ? Math.max(8, Math.round((b.value / maxV) * H)) : 8;
+          return (
+            <div key={b.label} className="flex flex-col items-center gap-1.5" style={{ width: W }}>
+              <span className="text-lg font-700" style={{ color: 'var(--color-text)' }}>{b.value}</span>
+              <div
+                className="w-full rounded-t-xl transition-all duration-700"
+                style={{ height: barH, backgroundColor: b.color }}
+              />
+              <span className="text-xs font-500 text-center" style={{ color: 'var(--color-text-muted)' }}>{b.label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          <span>Marketplace</span>
+          <span>Direto</span>
+        </div>
+        <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--color-border)' }}>
+          <div
+            className="h-2 rounded-full transition-all duration-700"
+            style={{ width: total > 0 ? `${pctDireto}%` : '0%', backgroundColor: 'var(--color-primary)' }}
+          />
+        </div>
       </div>
     </div>
   );
@@ -294,10 +443,10 @@ function LinkCard({ slug }: { slug: string }) {
   };
 
   return (
-    <div className="rounded-2xl p-4 space-y-3" style={card}>
-      <h3 className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>Link do Cardapio</h3>
+    <div className="rounded-2xl p-6 space-y-4" style={card}>
+      <h3 className="text-xs font-600" style={{ color: 'var(--color-text-secondary)' }}>Link do Cardápio</h3>
       <div
-        className="flex items-center gap-2 rounded-xl px-3 py-2"
+        className="flex items-center gap-3 rounded-xl px-4 py-3"
         style={{ backgroundColor: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-primary)' }}>
@@ -306,12 +455,10 @@ function LinkCard({ slug }: { slug: string }) {
         <span className="text-xs truncate flex-1" style={{ color: 'var(--color-text)' }}>{url}</span>
         <button
           onClick={handleCopy}
-          className="flex-shrink-0 px-3 py-1 rounded-lg text-xs font-600 transition-all flex items-center gap-1.5"
+          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-600 transition-all flex items-center gap-1.5"
           style={{
             backgroundColor: copied ? '#10B981' : 'var(--color-primary)',
-            color: '#0D0D0D',
-            border: 'none',
-            cursor: 'pointer',
+            color: '#0D0D0D', border: 'none', cursor: 'pointer',
           }}
         >
           {copied ? (
@@ -343,7 +490,7 @@ function LinkCard({ slug }: { slug: string }) {
           <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
           <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
         </svg>
-        Abrir cardapio
+        Abrir cardápio
       </a>
     </div>
   );
@@ -352,14 +499,12 @@ function LinkCard({ slug }: { slug: string }) {
 // ─── Period filter ─────────────────────────────────────────────────────────
 
 const PERIODOS = [
-  { key: '7d', label: '7 dias' },
+  { key: '7d',  label: '7 dias'  },
   { key: '30d', label: '30 dias' },
-  { key: '3m', label: '3 meses' },
+  { key: '3m',  label: '3 meses' },
 ] as const;
 
 type Periodo = typeof PERIODOS[number]['key'];
-
-// ─── Date helper ───────────────────────────────────────────────────────────
 
 function formatDate() {
   return new Date().toLocaleDateString('pt-BR', {
@@ -370,10 +515,11 @@ function formatDate() {
 // ─── Main component ────────────────────────────────────────────────────────
 
 export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
-  const [dash, setDash] = useState<DashData | null>(null);
+  const [dash, setDash]       = useState<DashData | null>(null);
   const [carteira, setCarteira] = useState<CarteiraInd | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [periodo, setPeriodo] = useState<Periodo>('30d');
+  const [evolucao, setEvolucao] = useState<EvolucaoPoint[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [periodo, setPeriodo]   = useState<Periodo>('30d');
 
   useEffect(() => {
     setLoading(true);
@@ -384,24 +530,23 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
       .then(([d, c]) => {
         setDash(d);
         setCarteira(c.indicadores);
+        setEvolucao(c.evolucao ?? []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [session]);
 
   if (loading) return <DashboardSkeleton />;
-  if (!dash) return null;
+  if (!dash)   return null;
 
   const taxaCaptura = dash.total_clientes > 0
-    ? Math.round((dash.clientes_capturados / dash.total_clientes) * 100)
-    : 0;
+    ? Math.round((dash.clientes_capturados / dash.total_clientes) * 100) : 0;
   const taxaDireta = dash.total_pedidos > 0
-    ? Math.round((dash.pedidos_diretos / dash.total_pedidos) * 100)
-    : 0;
+    ? Math.round((dash.pedidos_diretos / dash.total_pedidos) * 100) : 0;
   const pedidosIfood = dash.total_pedidos - dash.pedidos_diretos;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -421,7 +566,7 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
               className="px-3 py-1.5 rounded-xl text-xs font-600 transition-all"
               style={{
                 backgroundColor: periodo === p.key ? 'var(--color-primary)' : 'var(--color-surface-2)',
-                color: periodo === p.key ? '#0D0D0D' : 'var(--color-text-secondary)',
+                color:            periodo === p.key ? '#0D0D0D'              : 'var(--color-text-secondary)',
                 border: `1px solid ${periodo === p.key ? 'var(--color-primary)' : 'var(--color-border)'}`,
                 cursor: 'pointer',
               }}
@@ -432,12 +577,12 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
         </div>
       </div>
 
-      {/* Metric cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Linha 1 — Metric cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <MetricCard
           label="Clientes Capturados"
           value={dash.clientes_capturados}
-          sub={`${taxaCaptura}% de conversao`}
+          sub={`${taxaCaptura}% de Conversão`}
           accent="#F5A623"
           icon={
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -457,7 +602,7 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
           }
         />
         <MetricCard
-          label="LTV Medio"
+          label="LTV Médio"
           value={formatCurrency(Number(dash.ltv_medio))}
           sub="por cliente capturado"
           accent="#60A5FA"
@@ -471,7 +616,7 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
         <MetricCard
           label="Oportunidades iFood"
           value={carteira?.oportunidades_marketplace ?? 0}
-          sub="clientes nao capturados"
+          sub="clientes não capturados"
           accent="#C084FC"
           icon={
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -481,22 +626,31 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
         />
       </div>
 
-      {/* Charts row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <DonutChart
-          qr={carteira?.total_qr_code ?? 0}
-          espontaneo={carteira?.total_espontaneo ?? 0}
-          marketplace={carteira?.oportunidades_marketplace ?? 0}
-        />
-        <BarChart ifood={pedidosIfood} direto={dash.pedidos_diretos} />
-        <HealthCard
-          ativos={carteira?.clientes_ativos ?? 0}
-          emRisco={carteira?.clientes_em_risco ?? 0}
-          inativos={carteira?.clientes_inativos ?? 0}
-        />
+      {/* Linha 2 — Donut + Health */}
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-12 md:col-span-5">
+          <DonutChart
+            qr={carteira?.total_qr_code ?? 0}
+            espontaneo={carteira?.total_espontaneo ?? 0}
+            marketplace={carteira?.oportunidades_marketplace ?? 0}
+          />
+        </div>
+        <div className="col-span-12 md:col-span-7">
+          <HealthCard
+            ativos={carteira?.clientes_ativos ?? 0}
+            emRisco={carteira?.clientes_em_risco ?? 0}
+            inativos={carteira?.clientes_inativos ?? 0}
+          />
+        </div>
       </div>
 
-      {/* Link */}
+      {/* Linha 3 — Line chart */}
+      <LineChart evolucao={evolucao} />
+
+      {/* Linha 4 — Bar chart */}
+      <BarChart ifood={pedidosIfood} direto={dash.pedidos_diretos} />
+
+      {/* Linha 5 — Link */}
       <LinkCard slug={slug} />
     </div>
   );
