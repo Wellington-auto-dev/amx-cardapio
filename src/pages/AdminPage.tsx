@@ -66,67 +66,119 @@ function SidebarNav({
   nomeLoja,
   logoUrl,
   logoInitial,
+  collapsed = false,
 }: {
   activeTab: number;
   onChange: (i: number) => void;
   nomeLoja: string;
   logoUrl: string;
   logoInitial: string;
+  collapsed?: boolean;
 }) {
+  const [hovered, setHovered] = useState<number | null>(null);
+
   return (
     <>
-      <div className="p-4 pb-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
-        <div className="flex items-center gap-3">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={nomeLoja}
-              className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-              style={{ border: '1px solid var(--color-border)' }}
-            />
-          ) : (
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 flex-shrink-0"
-              style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
-            >
-              {logoInitial}
-            </div>
-          )}
-          <div className="min-w-0">
-            <p className="text-sm font-700 truncate" style={{ color: 'var(--color-text)' }}>
-              {nomeLoja || 'Minha Loja'}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Painel de Gestão</p>
+      {/* Header */}
+      <div className="flex-shrink-0 px-4 py-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        {collapsed ? (
+          <div className="flex justify-center">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={nomeLoja}
+                className="w-8 h-8 rounded-full object-cover"
+                style={{ border: '1px solid var(--color-border)' }}
+              />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-700"
+                style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
+              >
+                {logoInitial}
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={nomeLoja}
+                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                style={{ border: '1px solid var(--color-border)' }}
+              />
+            ) : (
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 flex-shrink-0"
+                style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
+              >
+                {logoInitial}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-700 truncate" style={{ color: 'var(--color-text)' }}>
+                {nomeLoja || 'Minha Loja'}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Painel de Gestão</p>
+            </div>
+          </div>
+        )}
       </div>
 
-      <nav className="flex-1 p-3 space-y-0.5">
+      {/* Nav */}
+      <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map((item, i) => (
-          <button
+          <div
             key={item.label}
-            onClick={() => onChange(i)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all"
-            style={{
-              backgroundColor: activeTab === i ? 'rgb(245 166 35 / 0.12)' : 'transparent',
-              color: activeTab === i ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-              fontWeight: activeTab === i ? 700 : 500,
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-            }}
+            className="relative"
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
           >
-            <span style={{ color: activeTab === i ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
-              {item.icon}
-            </span>
-            {item.label}
-            {activeTab === i && (
+            <button
+              onClick={() => onChange(i)}
+              className="w-full flex items-center rounded-xl text-sm transition-all"
+              style={{
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                padding: collapsed ? '10px 0' : '10px 12px',
+                gap: collapsed ? 0 : 12,
+                backgroundColor: activeTab === i ? 'rgb(245 166 35 / 0.12)' : 'transparent',
+                color: activeTab === i ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                fontWeight: activeTab === i ? 700 : 500,
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{ color: activeTab === i ? 'var(--color-primary)' : 'var(--color-text-muted)', flexShrink: 0 }}>
+                {item.icon}
+              </span>
+              {!collapsed && item.label}
+              {!collapsed && activeTab === i && (
+                <div
+                  className="ml-auto w-1 h-4 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                />
+              )}
+            </button>
+
+            {/* Tooltip — desktop collapsed mode only */}
+            {collapsed && (
               <div
-                className="ml-auto w-1 h-4 rounded-full flex-shrink-0"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-              />
+                className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 rounded-lg text-xs font-600 whitespace-nowrap transition-opacity duration-150"
+                style={{
+                  opacity: hovered === i ? 1 : 0,
+                  backgroundColor: 'var(--color-surface-2)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text)',
+                  zIndex: 100,
+                  boxShadow: '0 4px 12px rgb(0 0 0 / 0.35)',
+                }}
+              >
+                {item.label}
+              </div>
             )}
-          </button>
+          </div>
         ))}
       </nav>
     </>
@@ -143,7 +195,8 @@ export default function AdminPage() {
 
   const [activeTab, setActiveTab] = useState(0);
   const [logoUrl, setLogoUrl] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);         // mobile overlay
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // desktop collapse
 
   const currentLogo = logoUrl || merchant?.logo_url || '';
   const nomeLoja = merchant?.nome_loja ?? '';
@@ -187,15 +240,48 @@ export default function AdminPage() {
 
         {/* Desktop sidebar */}
         <aside
-          className="hidden md:flex flex-col w-56 flex-shrink-0 sticky top-0 h-screen"
-          style={{ backgroundColor: 'var(--color-surface)', borderRight: '1px solid var(--color-border)' }}
+          className="hidden md:flex flex-col flex-shrink-0 sticky top-0 h-screen transition-all duration-300"
+          style={{
+            width: sidebarCollapsed ? 64 : 224,
+            backgroundColor: 'var(--color-surface)',
+            borderRight: '1px solid var(--color-border)',
+            overflow: 'visible',
+          }}
         >
+          {/* Toggle button */}
+          <div
+            className="flex-shrink-0 flex px-2 pt-2.5 pb-1"
+            style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-end' }}
+          >
+            <button
+              onClick={() => setSidebarCollapsed((c) => !c)}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-opacity hover:opacity-60"
+              style={{
+                backgroundColor: 'var(--color-surface-2)',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-muted)',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+              aria-label={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                {sidebarCollapsed ? (
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                ) : (
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                )}
+              </svg>
+            </button>
+          </div>
+
           <SidebarNav
             activeTab={activeTab}
             onChange={handleTabChange}
             nomeLoja={nomeLoja}
             logoUrl={currentLogo}
             logoInitial={logoInitial}
+            collapsed={sidebarCollapsed}
           />
         </aside>
 
