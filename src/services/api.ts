@@ -227,3 +227,30 @@ export async function fetchCarteira(
   });
   return data;
 }
+
+// ─── Chat ─────────────────────────────────────────────────────────────────
+
+export async function fetchChat(
+  merchantId: string,
+  token: string,
+): Promise<{
+  conversas: {
+    session_id: string;
+    nome: string;
+    origem: string;
+    total_mensagens: number;
+    ultima_mensagem: string;
+    ultimo_tipo: string;
+    mensagens: {
+      id: number;
+      tipo: string;
+      conteudo: string;
+    }[];
+  }[];
+}> {
+  const { data } = await api.post('/amx-cardapio-chat', {
+    merchant_id: merchantId,
+    token,
+  });
+  return data;
+}
