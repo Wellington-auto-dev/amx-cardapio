@@ -37,6 +37,7 @@ export function Chat({ session }: ChatProps) {
   const [loading, setLoading] = useState(true);
   const [conversaAtiva, setConversaAtiva] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
+  const [modalAberto, setModalAberto] = useState(false);
 
   useEffect(() => {
     fetchChat(session.merchant_id, session.token)
@@ -49,6 +50,11 @@ export function Chat({ session }: ChatProps) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [session]);
+
+  const handleAbrirConversa = (session_id: string) => {
+    setConversaAtiva(session_id);
+    setModalAberto(true);
+  };
 
   const conversasFiltradas = conversas.filter(c =>
     !busca || c.nome.toLowerCase().includes(busca.toLowerCase()) || c.session_id.includes(busca)
@@ -72,10 +78,7 @@ export function Chat({ session }: ChatProps) {
 
   if (conversas.length === 0) {
     return (
-      <div
-        className="rounded-2xl p-12 text-center"
-        style={surfaceStyle}
-      >
+      <div className="rounded-2xl p-12 text-center" style={surfaceStyle}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--color-text-muted)' }}>
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
@@ -85,20 +88,12 @@ export function Chat({ session }: ChatProps) {
     );
   }
 
-  const [modalAberto, setModalAberto] = useState(false);
-
-  const handleAbrirConversa = (session_id: string) => {
-    setConversaAtiva(session_id);
-    setModalAberto(true);
-  };
-
   return (
     <div className="space-y-4">
 
       {/* Modal mobile */}
       {modalAberto && conversaAberta && (
         <div className="fixed inset-0 z-50 md:hidden flex flex-col" style={{ backgroundColor: 'var(--color-background)' }}>
-          {/* Header do modal */}
           <div
             className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
             style={{ backgroundColor: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}
@@ -123,7 +118,6 @@ export function Chat({ session }: ChatProps) {
               <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{formatPhone(conversaAberta.session_id)}</p>
             </div>
           </div>
-          {/* Mensagens */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {conversaAberta.mensagens.map(msg => (
               <div key={msg.id} className={`flex ${msg.tipo === 'human' ? 'justify-end' : 'justify-start'}`}>
@@ -140,7 +134,6 @@ export function Chat({ session }: ChatProps) {
               </div>
             ))}
           </div>
-          {/* Rodapé */}
           <div
             className="px-4 py-3 text-center flex-shrink-0"
             style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)' }}
@@ -166,7 +159,6 @@ export function Chat({ session }: ChatProps) {
           className="w-full md:w-72 flex-shrink-0 rounded-2xl flex flex-col overflow-hidden"
           style={surfaceStyle}
         >
-          {/* Busca */}
           <div className="p-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
             <div className="relative">
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-text-muted)' }}>
@@ -187,7 +179,6 @@ export function Chat({ session }: ChatProps) {
             </div>
           </div>
 
-          {/* Lista */}
           <div className="flex-1 overflow-y-auto">
             {conversasFiltradas.map(conversa => (
               <div
@@ -195,24 +186,17 @@ export function Chat({ session }: ChatProps) {
                 onClick={() => handleAbrirConversa(conversa.session_id)}
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors"
                 style={{
-                  backgroundColor: conversaAtiva === conversa.session_id
-                    ? 'var(--color-surface-2)'
-                    : 'transparent',
+                  backgroundColor: conversaAtiva === conversa.session_id ? 'var(--color-surface-2)' : 'transparent',
                   borderBottom: '1px solid var(--color-border)',
-                  borderLeft: conversaAtiva === conversa.session_id
-                    ? '2px solid var(--color-primary)'
-                    : '2px solid transparent',
+                  borderLeft: conversaAtiva === conversa.session_id ? '2px solid var(--color-primary)' : '2px solid transparent',
                 }}
               >
-                {/* Avatar */}
                 <div
                   className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 flex-shrink-0"
                   style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
                 >
                   {conversa.nome.charAt(0).toUpperCase()}
                 </div>
-
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-600 truncate" style={{ color: 'var(--color-text)' }}>
@@ -232,14 +216,13 @@ export function Chat({ session }: ChatProps) {
           </div>
         </div>
 
-        {/* Conversa aberta */}
+        {/* Conversa aberta — desktop only */}
         <div
           className="hidden md:flex flex-1 rounded-2xl flex-col overflow-hidden"
           style={surfaceStyle}
         >
           {conversaAberta ? (
             <>
-              {/* Header da conversa */}
               <div
                 className="px-5 py-3 flex items-center gap-3"
                 style={{ borderBottom: '1px solid var(--color-border)' }}
@@ -259,23 +242,14 @@ export function Chat({ session }: ChatProps) {
                   </p>
                 </div>
               </div>
-
-              {/* Mensagens */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {conversaAberta.mensagens.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.tipo === 'human' ? 'justify-end' : 'justify-start'}`}
-                  >
+                  <div key={msg.id} className={`flex ${msg.tipo === 'human' ? 'justify-end' : 'justify-start'}`}>
                     <div
                       className="max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl text-xs leading-relaxed"
                       style={{
-                        backgroundColor: msg.tipo === 'human'
-                          ? 'var(--color-primary)'
-                          : 'var(--color-surface-2)',
-                        color: msg.tipo === 'human'
-                          ? '#0D0D0D'
-                          : 'var(--color-text)',
+                        backgroundColor: msg.tipo === 'human' ? 'var(--color-primary)' : 'var(--color-surface-2)',
+                        color: msg.tipo === 'human' ? '#0D0D0D' : 'var(--color-text)',
                         borderBottomRightRadius: msg.tipo === 'human' ? 4 : 16,
                         borderBottomLeftRadius: msg.tipo === 'ai' ? 4 : 16,
                       }}
@@ -284,8 +258,6 @@ export function Chat({ session }: ChatProps) {
                   </div>
                 ))}
               </div>
-
-              {/* Rodapé informativo */}
               <div
                 className="px-5 py-3 text-center"
                 style={{ borderTop: '1px solid var(--color-border)' }}
