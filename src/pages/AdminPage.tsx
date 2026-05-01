@@ -401,7 +401,7 @@ export default function AdminPage() {
           </header>
 
           {/* Page content */}
-          <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-5 space-y-4">
+          <main className="flex-1 w-full px-6 py-5 space-y-4">
 
             {session && (
               <StoreSettings
