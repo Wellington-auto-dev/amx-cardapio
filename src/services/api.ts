@@ -258,6 +258,36 @@ export async function atualizarMensagemFechado(
   return data;
 }
 
+// ─── Horários ─────────────────────────────────────────────────────────────
+
+export async function atualizarHorarios(
+  merchantId: string,
+  token: string,
+  horarios: Record<string, { aberto: boolean; abertura: string; fechamento: string }>,
+): Promise<{ sucesso: boolean }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'atualizar_horarios',
+    horarios,
+  });
+  return data;
+}
+
+export async function reordenarItens(
+  merchantId: string,
+  token: string,
+  itens: { id: string; ordem: number }[],
+): Promise<{ sucesso: boolean }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'reordenar_itens',
+    itens,
+  });
+  return data;
+}
+
 // ─── Pedidos ──────────────────────────────────────────────────────────────
 
 export async function fetchPedidos(

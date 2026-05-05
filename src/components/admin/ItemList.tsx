@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import type { Categoria, Item } from '@/types/catalog';
 import type { AdminSession } from '@/types/admin';
-import { atualizarDisponibilidade, deletarItem, editarItem } from '@/services/api';
+import { atualizarDisponibilidade, deletarItem, editarItem, reordenarItens } from '@/services/api';
 import { uploadImagem } from '@/services/cloudinary';
 import { Toggle } from '@/components/ui/Toggle';
 import { Badge } from '@/components/ui/Badge';
@@ -305,13 +305,15 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
 
 // ─── Item Row ──────────────────────────────────────────────────────────────
 
-function ItemRow({ item, categoria, session, onEdit, onDelete, onToast }: {
+function ItemRow({ item, categoria, session, onEdit, onDelete, onToast, onMoveUp, onMoveDown }: {
   item: Item;
   categoria: string;
   session: AdminSession;
   onEdit: (item: Item, categoria: string) => void;
   onDelete: (item: Item) => void;
   onToast: ItemListProps['onToast'];
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }) {
   const [disponivel, setDisponivel] = useState(item.disponivel);
   const [loading, setLoading] = useState(false);
@@ -329,8 +331,42 @@ function ItemRow({ item, categoria, session, onEdit, onDelete, onToast }: {
     }
   };
 
+  const arrowBtn: React.CSSProperties = {
+    color: 'var(--color-text-muted)',
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 2,
+  };
+
   return (
-    <div className="flex items-center gap-3 py-3" style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
+    <div className="flex items-center gap-2 py-3" style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
+      {/* Order arrows */}
+      <div className="flex flex-col gap-0.5 shrink-0">
+        <button
+          onClick={onMoveUp}
+          disabled={!onMoveUp}
+          aria-label={`Mover ${item.nome} para cima`}
+          className="transition-opacity hover:opacity-100 disabled:opacity-15"
+          style={{ ...arrowBtn, opacity: onMoveUp ? 0.4 : 0.15 }}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+            <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={!onMoveDown}
+          aria-label={`Mover ${item.nome} para baixo`}
+          className="transition-opacity hover:opacity-100 disabled:opacity-15"
+          style={{ ...arrowBtn, opacity: onMoveDown ? 0.4 : 0.15 }}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+
       {item.foto_url && (
         <img
           src={item.foto_url}
@@ -365,7 +401,7 @@ function ItemRow({ item, categoria, session, onEdit, onDelete, onToast }: {
       <button
         onClick={() => onDelete(item)}
         aria-label={`Excluir ${item.nome}`}
-        className="transition-opacity opacity-30 hover:opacity-100 ml-1"
+        className="transition-opacity opacity-30 hover:opacity-100"
         style={{ color: '#F87171', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -379,12 +415,33 @@ function ItemRow({ item, categoria, session, onEdit, onDelete, onToast }: {
 // ─── Item List ─────────────────────────────────────────────────────────────
 
 export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }: ItemListProps) {
+  const [localCategorias, setLocalCategorias] = useState<Categoria[]>(categorias);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
 
-  const totalItens = categorias.reduce((s, c) => s + c.itens.length, 0);
-  const categoriasExistentes = categorias.map((c) => c.nome);
+  useEffect(() => {
+    setLocalCategorias(categorias);
+    setHasChanges(false);
+  }, [categorias]);
+
+  const totalItens = localCategorias.reduce((s, c) => s + c.itens.length, 0);
+  const categoriasExistentes = localCategorias.map((c) => c.nome);
+
+  const moveItem = (catNome: string, idx: number, dir: 'up' | 'down') => {
+    setLocalCategorias((prev) =>
+      prev.map((cat) => {
+        if (cat.nome !== catNome) return cat;
+        const itens = [...cat.itens];
+        const newIdx = dir === 'up' ? idx - 1 : idx + 1;
+        [itens[idx], itens[newIdx]] = [itens[newIdx], itens[idx]];
+        return { ...cat, itens };
+      }),
+    );
+    setHasChanges(true);
+  };
 
   const confirmDelete = async () => {
     if (!itemToDelete) return;
@@ -398,6 +455,24 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
     } finally {
       setDeleting(false);
       setItemToDelete(null);
+    }
+  };
+
+  const handleSaveOrder = async () => {
+    setSavingOrder(true);
+    try {
+      let ordem = 0;
+      const itens = localCategorias.flatMap((cat) =>
+        cat.itens.map((item) => ({ id: item.id, ordem: ordem++ })),
+      );
+      await reordenarItens(session.merchant_id, session.token, itens);
+      onToast('success', 'Ordem salva com sucesso!');
+      setHasChanges(false);
+      onRefresh();
+    } catch {
+      onToast('error', 'Erro ao salvar ordem');
+    } finally {
+      setSavingOrder(false);
     }
   };
 
@@ -421,8 +496,22 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
 
   return (
     <>
+      {hasChanges && (
+        <div className="flex justify-end mb-3">
+          <button
+            onClick={handleSaveOrder}
+            disabled={savingOrder}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-600 transition-opacity disabled:opacity-50 hover:opacity-85"
+            style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D', cursor: 'pointer' }}
+          >
+            {savingOrder && <div className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin" />}
+            {savingOrder ? 'Salvando...' : 'Salvar Ordem'}
+          </button>
+        </div>
+      )}
+
       <div className="space-y-3">
-        {categorias.map((cat) => (
+        {localCategorias.map((cat) => (
           <div
             key={cat.nome}
             className="rounded-2xl overflow-hidden"
@@ -441,7 +530,7 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
               </span>
             </div>
             <div className="px-4">
-              {cat.itens.map((item) => (
+              {cat.itens.map((item, idx) => (
                 <ItemRow
                   key={item.id}
                   item={item}
@@ -450,6 +539,8 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
                   onEdit={(i, c) => setEditTarget({ item: i, categoria: c })}
                   onDelete={setItemToDelete}
                   onToast={onToast}
+                  onMoveUp={idx > 0 ? () => moveItem(cat.nome, idx, 'up') : undefined}
+                  onMoveDown={idx < cat.itens.length - 1 ? () => moveItem(cat.nome, idx, 'down') : undefined}
                 />
               ))}
             </div>

@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/useToast';
 import { useCatalog } from '@/hooks/useCatalog';
 import { TokenGuard } from '@/components/admin/TokenGuard';
 import { StoreSettings } from '@/components/admin/StoreSettings';
+import { Configuracoes } from '@/components/admin/Configuracoes';
 import { Dashboard } from '@/components/admin/Dashboard';
 import { Carteira } from '@/components/admin/Carteira';
 import { Chat } from '@/components/admin/Chat';
@@ -420,6 +421,16 @@ export default function AdminPage() {
           {/* Page content */}
           <main className="flex-1 w-full px-6 py-5 space-y-4">
 
+            {session && (
+              <StoreSettings
+                session={session}
+                nomeLoja={nomeLoja}
+                logoUrl={currentLogo}
+                onLogoUpdated={(url) => { setLogoUrl(url); handleRefresh(); }}
+                onToast={toast}
+              />
+            )}
+
             <div
               className="rounded-2xl overflow-hidden"
               style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
@@ -497,14 +508,12 @@ export default function AdminPage() {
                 )}
 
                 {activeTab === 7 && session && (
-                  <StoreSettings
+                  <Configuracoes
                     session={session}
-                    nomeLoja={nomeLoja}
-                    logoUrl={currentLogo}
+                    slug={slug}
                     lojaAberta={merchant?.loja_aberta ?? true}
                     mensagemFechado={merchant?.mensagem_fechado ?? 'Estamos fechados no momento. Volte em breve!'}
-                    onLogoUpdated={(url) => { setLogoUrl(url); handleRefresh(); }}
-                    onToast={toast}
+                    horarios={merchant?.horarios}
                   />
                 )}
               </div>

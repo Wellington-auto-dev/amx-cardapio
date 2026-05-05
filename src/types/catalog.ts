@@ -37,5 +37,14 @@ export interface Merchant {
   whatsapp_numero: string;
   loja_aberta: boolean;
   mensagem_fechado: string;
+  horarios?: {
+    segunda:  { aberto: boolean; abertura: string; fechamento: string };
+    terca:    { aberto: boolean; abertura: string; fechamento: string };
+    quarta:   { aberto: boolean; abertura: string; fechamento: string };
+    quinta:   { aberto: boolean; abertura: string; fechamento: string };
+    sexta:    { aberto: boolean; abertura: string; fechamento: string };
+    sabado:   { aberto: boolean; abertura: string; fechamento: string };
+    domingo:  { aberto: boolean; abertura: string; fechamento: string };
+  };
   categorias: Categoria[];
 }

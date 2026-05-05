@@ -75,12 +75,24 @@ export default function CatalogPage() {
   const [activeCategory, setActiveCategory] = useState('');
   const [modalItem, setModalItem] = useState<Item | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
+  const [busca, setBusca] = useState('');
 
   const sectionRefs = useRef<Record<string, HTMLElement>>({});
   const isScrolling = useRef(false);
 
   const categorias = merchant?.categorias ?? [];
   const categoriaNomes = categorias.map((c) => c.nome);
+
+  const termoBusca = busca.toLowerCase().trim();
+  const itensBusca = termoBusca
+    ? categorias.flatMap((cat) =>
+        cat.itens.filter(
+          (item) =>
+            item.nome.toLowerCase().includes(termoBusca) ||
+            item.descricao.toLowerCase().includes(termoBusca),
+        ),
+      )
+    : [];
 
   useEffect(() => {
     if (categoriaNomes.length > 0 && !activeCategory) {
@@ -221,10 +233,50 @@ export default function CatalogPage() {
             className="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-600"
             style={{ backgroundColor: 'rgb(245 166 35 / 0.18)', color: '#0D0D0D' }}
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0" style={{ color: '#0D0D0D' }}>
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" style={{ color: '#0D0D0D' }}>
               <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
             </svg>
             <span className="text-center">{merchant.mensagem_fechado}</span>
+          </div>
+        )}
+
+        {/* Barra de busca */}
+        {!isLoading && (
+          <div className="px-4 pb-3 pt-2">
+            <div className="relative">
+              <svg
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Buscar no cardápio..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="w-full rounded-xl pl-9 pr-9 py-2.5 text-sm outline-none"
+                style={{
+                  backgroundColor: 'var(--color-surface-2)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
+              />
+              {busca && (
+                <button
+                  onClick={() => setBusca('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity"
+                  style={{ color: 'var(--color-text)', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                  aria-label="Limpar busca"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         )}
       </header>
@@ -232,8 +284,8 @@ export default function CatalogPage() {
       {/* Layout */}
       <div className="max-w-6xl mx-auto flex gap-0 md:gap-5 p-0 md:p-4 md:pt-6">
 
-        {/* Desktop category sidebar */}
-        {!isLoading && categoriaNomes.length > 0 && (
+        {/* Desktop category sidebar — hidden when searching */}
+        {!isLoading && categoriaNomes.length > 0 && !termoBusca && (
           <CategorySidebar
             categorias={categoriaNomes}
             active={activeCategory}
@@ -247,7 +299,28 @@ export default function CatalogPage() {
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => <ItemCardSkeleton key={i} />)}
             </div>
+          ) : termoBusca ? (
+            /* ── Resultados de busca ─────────────────────────── */
+            itensBusca.length === 0 ? (
+              <div className="flex flex-col items-center py-16 gap-3">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-12 h-12 opacity-20" style={{ color: 'var(--color-text-secondary)' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <p className="text-sm font-600" style={{ color: 'var(--color-text)' }}>Nenhum item encontrado</p>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Tente buscar por outro nome ou ingrediente</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs font-600 mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {itensBusca.length} {itensBusca.length === 1 ? 'resultado' : 'resultados'} para "{busca}"
+                </p>
+                {itensBusca.map((item) => (
+                  <ItemCard key={item.id} item={item} onAdd={setModalItem} />
+                ))}
+              </div>
+            )
           ) : (
+            /* ── Layout normal por categorias ─────────────────── */
             categorias.map((cat) => (
               <section
                 key={cat.nome}
