@@ -8,6 +8,7 @@ import { StoreSettings } from '@/components/admin/StoreSettings';
 import { Dashboard } from '@/components/admin/Dashboard';
 import { Carteira } from '@/components/admin/Carteira';
 import { Chat } from '@/components/admin/Chat';
+import { Pedidos } from '@/components/admin/Pedidos';
 import { ImportCard } from '@/components/admin/ImportCard';
 import { ItemList } from '@/components/admin/ItemList';
 import { ManualItemForm } from '@/components/admin/ManualItemForm';
@@ -42,6 +43,14 @@ const NAV_ITEMS = [
     ),
   },
   {
+    label: 'Pedidos',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 flex-shrink-0">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+  },
+  {
     label: 'Importar',
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
@@ -63,6 +72,14 @@ const NAV_ITEMS = [
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Configurações',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 flex-shrink-0">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.065 2.571c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.572-1.065c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.571c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.065-2.572c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
   },
@@ -403,18 +420,6 @@ export default function AdminPage() {
           {/* Page content */}
           <main className="flex-1 w-full px-6 py-5 space-y-4">
 
-            {session && (
-              <StoreSettings
-                session={session}
-                nomeLoja={nomeLoja}
-                logoUrl={currentLogo}
-                lojaAberta={merchant?.loja_aberta ?? true}
-                mensagemFechado={merchant?.mensagem_fechado ?? 'Estamos fechados no momento. Volte em breve!'}
-                onLogoUpdated={(url) => { setLogoUrl(url); handleRefresh(); }}
-                onToast={toast}
-              />
-            )}
-
             <div
               className="rounded-2xl overflow-hidden"
               style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
@@ -444,15 +449,19 @@ export default function AdminPage() {
                 )}
 
                 {activeTab === 3 && session && (
+                  <Pedidos session={session} />
+                )}
+
+                {activeTab === 4 && session && (
                   <ImportCard
                     session={session}
                     onSuccess={handleRefresh}
-                    onTabChange={(tab) => setActiveTab(tab + 3)}
+                    onTabChange={(tab) => setActiveTab(tab + 4)}
                     onToast={toast}
                   />
                 )}
 
-                {activeTab === 4 && (
+                {activeTab === 5 && (
                   <div className="space-y-4">
                     <div className="flex justify-end">
                       <button
@@ -471,18 +480,30 @@ export default function AdminPage() {
                         categorias={categorias}
                         session={session}
                         onRefresh={handleRefresh}
-                        onAddFirst={() => setActiveTab(5)}
+                        onAddFirst={() => setActiveTab(6)}
                         onToast={toast}
                       />
                     )}
                   </div>
                 )}
 
-                {activeTab === 5 && session && (
+                {activeTab === 6 && session && (
                   <ManualItemForm
                     session={session}
                     categoriasExistentes={categoriasExistentes}
-                    onSuccess={() => { handleRefresh(); setActiveTab(4); }}
+                    onSuccess={() => { handleRefresh(); setActiveTab(5); }}
+                    onToast={toast}
+                  />
+                )}
+
+                {activeTab === 7 && session && (
+                  <StoreSettings
+                    session={session}
+                    nomeLoja={nomeLoja}
+                    logoUrl={currentLogo}
+                    lojaAberta={merchant?.loja_aberta ?? true}
+                    mensagemFechado={merchant?.mensagem_fechado ?? 'Estamos fechados no momento. Volte em breve!'}
+                    onLogoUpdated={(url) => { setLogoUrl(url); handleRefresh(); }}
                     onToast={toast}
                   />
                 )}

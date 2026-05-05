@@ -258,6 +258,51 @@ export async function atualizarMensagemFechado(
   return data;
 }
 
+// ─── Pedidos ──────────────────────────────────────────────────────────────
+
+export async function fetchPedidos(
+  merchantId: string,
+  token: string,
+): Promise<{
+  indicadores: {
+    total_pedidos: number;
+    total_ifood: number;
+    total_direto: number;
+    valor_total: string;
+    valor_ifood: string;
+    valor_direto: string;
+    ticket_medio: string;
+  };
+  pedidos: {
+    id: string;
+    canal: string;
+    status: string;
+    total: string;
+    criado_em: string;
+    atualizado_em: string;
+    cliente_nome: string;
+    cliente_phone: string | null;
+    forma_pagamento: string;
+    endereco: {
+      logradouro: string;
+      numero: string;
+      complemento: string;
+      cidade: string;
+    };
+    itens: {
+      nome: string;
+      preco: number;
+      quantidade: number;
+    }[];
+  }[];
+}> {
+  const { data } = await api.post('/amx-cardapio-pedidos', {
+    merchant_id: merchantId,
+    token,
+  });
+  return data;
+}
+
 // ─── Chat ─────────────────────────────────────────────────────────────────
 
 export async function fetchChat(
