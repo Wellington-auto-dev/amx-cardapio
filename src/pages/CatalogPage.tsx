@@ -132,6 +132,10 @@ export default function CatalogPage() {
 
   const handleFinalize = () => {
     if (!merchant) return;
+    if (merchant.loja_aberta === false) {
+      addToast('error', merchant.mensagem_fechado);
+      return;
+    }
     abrirWhatsApp(merchant.whatsapp_numero, cart.items, cart.total);
     cart.clearCart();
   };
@@ -210,6 +214,19 @@ export default function CatalogPage() {
             />
           )}
         </div>
+
+        {/* Banner loja fechada */}
+        {!isLoading && merchant?.loja_aberta === false && (
+          <div
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 text-sm font-600"
+            style={{ backgroundColor: 'rgb(245 166 35 / 0.18)', color: '#0D0D0D' }}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0" style={{ color: '#0D0D0D' }}>
+              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+            </svg>
+            <span className="text-center">{merchant.mensagem_fechado}</span>
+          </div>
+        )}
       </header>
 
       {/* Layout */}
@@ -264,6 +281,7 @@ export default function CatalogPage() {
           onUpdateQuantity={cart.updateQuantity}
           onRemove={cart.removeItem}
           onFinalize={handleFinalize}
+          lojaFechada={merchant?.loja_aberta === false}
         />
       </div>
 
@@ -283,6 +301,7 @@ export default function CatalogPage() {
         onUpdateQuantity={cart.updateQuantity}
         onRemove={cart.removeItem}
         onFinalize={handleFinalize}
+        lojaFechada={merchant?.loja_aberta === false}
       />
 
       <ItemModal

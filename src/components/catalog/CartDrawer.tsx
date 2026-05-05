@@ -10,6 +10,7 @@ interface CartDrawerProps {
   onUpdateQuantity: (cartItemId: string, quantidade: number) => void;
   onRemove: (cartItemId: string) => void;
   onFinalize: () => void;
+  lojaFechada?: boolean;
 }
 
 function CartItemRow({
@@ -92,7 +93,7 @@ function EmptyCart() {
   );
 }
 
-function CartFooter({ total, onFinalize }: { total: number; onFinalize: () => void }) {
+function CartFooter({ total, onFinalize, lojaFechada }: { total: number; onFinalize: () => void; lojaFechada?: boolean }) {
   return (
     <div className="px-4 pb-6 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
       <div className="flex justify-between items-center mb-3">
@@ -101,11 +102,13 @@ function CartFooter({ total, onFinalize }: { total: number; onFinalize: () => vo
       </div>
       <button
         onClick={onFinalize}
-        className="w-full py-3.5 rounded-xl font-700 text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all"
+        className="w-full py-3.5 rounded-xl font-700 text-sm flex items-center justify-center gap-2 transition-all"
         style={{
           backgroundColor: 'var(--color-whatsapp)',
           color: '#fff',
-          boxShadow: '0 4px 16px rgb(37 211 102 / 0.3)',
+          boxShadow: lojaFechada ? 'none' : '0 4px 16px rgb(37 211 102 / 0.3)',
+          opacity: lojaFechada ? 0.45 : 1,
+          cursor: lojaFechada ? 'not-allowed' : 'pointer',
         }}
       >
         <WhatsAppIcon />
@@ -117,7 +120,7 @@ function CartFooter({ total, onFinalize }: { total: number; onFinalize: () => vo
 
 /** Sidebar — desktop */
 export function CartSidebar({
-  items, total, onUpdateQuantity, onRemove, onFinalize,
+  items, total, onUpdateQuantity, onRemove, onFinalize, lojaFechada,
 }: Omit<CartDrawerProps, 'open' | 'onClose'>) {
   return (
     <aside
@@ -141,7 +144,7 @@ export function CartSidebar({
               <CartItemRow key={item.cart_item_id} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} />
             ))}
           </div>
-          <CartFooter total={total} onFinalize={onFinalize} />
+          <CartFooter total={total} onFinalize={onFinalize} lojaFechada={lojaFechada} />
         </>
       )}
     </aside>
@@ -150,9 +153,9 @@ export function CartSidebar({
 
 /** Bottom sheet — mobile */
 export function CartDrawer({
-  items, total, open, onClose, onUpdateQuantity, onRemove, onFinalize,
+  items, total, open, onClose, onUpdateQuantity, onRemove, onFinalize, lojaFechada,
 }: CartDrawerProps) {
-  const handleFinalize = () => { onFinalize(); onClose(); };
+  const handleFinalize = () => { onFinalize(); if (!lojaFechada) onClose(); };
 
   return (
     <BottomSheet open={open} onClose={onClose} title="Seu pedido">
@@ -165,7 +168,7 @@ export function CartDrawer({
           ))
         )}
       </div>
-      {items.length > 0 && <CartFooter total={total} onFinalize={handleFinalize} />}
+      {items.length > 0 && <CartFooter total={total} onFinalize={handleFinalize} lojaFechada={lojaFechada} />}
     </BottomSheet>
   );
 }

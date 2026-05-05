@@ -35,5 +35,7 @@ export interface Merchant {
   nome_loja: string;
   logo_url: string;
   whatsapp_numero: string;
+  loja_aberta: boolean;
+  mensagem_fechado: string;
   categorias: Categoria[];
 }

@@ -228,6 +228,36 @@ export async function fetchCarteira(
   return data;
 }
 
+// ─── Status da loja ───────────────────────────────────────────────────────
+
+export async function toggleLojaAberta(
+  merchantId: string,
+  token: string,
+  lojaAberta: boolean,
+): Promise<{ sucesso: boolean }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'toggle_loja',
+    loja_aberta: lojaAberta,
+  });
+  return data;
+}
+
+export async function atualizarMensagemFechado(
+  merchantId: string,
+  token: string,
+  mensagemFechado: string,
+): Promise<{ sucesso: boolean }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'atualizar_mensagem_fechado',
+    mensagem_fechado: mensagemFechado,
+  });
+  return data;
+}
+
 // ─── Chat ─────────────────────────────────────────────────────────────────
 
 export async function fetchChat(

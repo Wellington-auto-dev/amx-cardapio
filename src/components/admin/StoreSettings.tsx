@@ -1,22 +1,29 @@
 import { useState, useRef } from 'react';
 import type { AdminSession } from '@/types/admin';
-import { atualizarLogo } from '@/services/api';
+import { atualizarLogo, toggleLojaAberta, atualizarMensagemFechado } from '@/services/api';
 import { uploadImagem } from '@/services/cloudinary';
+import { Toggle } from '@/components/ui/Toggle';
 
 interface StoreSettingsProps {
   session: AdminSession;
   nomeLoja: string;
   logoUrl: string;
+  lojaAberta: boolean;
+  mensagemFechado: string;
   onLogoUpdated: (url: string) => void;
   onToast: (type: 'success' | 'error', title: string, msg?: string) => void;
 }
 
-export function StoreSettings({ session, nomeLoja, logoUrl, onLogoUpdated, onToast }: StoreSettingsProps) {
+export function StoreSettings({ session, nomeLoja, logoUrl, lojaAberta, mensagemFechado, onLogoUpdated, onToast }: StoreSettingsProps) {
   const [inputUrl, setInputUrl] = useState(logoUrl);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [lojaAbertaState, setLojaAbertaState] = useState(lojaAberta);
+  const [togglingLoja, setTogglingLoja] = useState(false);
+  const [mensagemFechadoState, setMensagemFechadoState] = useState(mensagemFechado);
+  const [savingMensagem, setSavingMensagem] = useState(false);
 
   const handleSave = async () => {
     if (!inputUrl.trim()) return;
@@ -29,6 +36,33 @@ export function StoreSettings({ session, nomeLoja, logoUrl, onLogoUpdated, onToa
       onToast('error', 'Erro ao salvar logo', 'Tente novamente em instantes.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleLoja = async (aberta: boolean) => {
+    setLojaAbertaState(aberta);
+    setTogglingLoja(true);
+    try {
+      await toggleLojaAberta(session.merchant_id, session.token, aberta);
+      onToast('success', aberta ? 'Loja aberta!' : 'Loja fechada!');
+    } catch {
+      setLojaAbertaState(!aberta);
+      onToast('error', 'Erro ao alterar status da loja', 'Tente novamente em instantes.');
+    } finally {
+      setTogglingLoja(false);
+    }
+  };
+
+  const handleSaveMensagem = async () => {
+    if (!mensagemFechadoState.trim()) return;
+    setSavingMensagem(true);
+    try {
+      await atualizarMensagemFechado(session.merchant_id, session.token, mensagemFechadoState.trim());
+      onToast('success', 'Mensagem atualizada com sucesso!');
+    } catch {
+      onToast('error', 'Erro ao salvar mensagem', 'Tente novamente em instantes.');
+    } finally {
+      setSavingMensagem(false);
     }
   };
 
@@ -144,6 +178,51 @@ export function StoreSettings({ session, nomeLoja, logoUrl, onLogoUpdated, onToa
             style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
           >
             {loading ? 'Salvando...' : 'Salvar Logo'}
+          </button>
+
+          {/* Status da loja */}
+          <div className="pt-2" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <label className="block text-xs font-600 mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              Status da loja
+            </label>
+            <div className="flex items-center gap-3">
+              <Toggle
+                checked={lojaAbertaState}
+                onChange={handleToggleLoja}
+                disabled={togglingLoja}
+                ariaLabel="Alternar status da loja"
+              />
+              <span className="text-sm font-600" style={{ color: lojaAbertaState ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}>
+                {lojaAbertaState ? 'Loja Aberta' : 'Loja Fechada'}
+              </span>
+            </div>
+          </div>
+
+          {/* Mensagem de loja fechada */}
+          <div>
+            <label htmlFor="mensagem-fechado" className="block text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+              Mensagem de loja fechada
+            </label>
+            <input
+              id="mensagem-fechado"
+              type="text"
+              value={mensagemFechadoState}
+              onChange={(e) => setMensagemFechadoState(e.target.value)}
+              placeholder="Estamos fechados no momento. Volte em breve!"
+              style={inputStyle}
+            />
+            <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
+              Exibida no banner quando a loja estiver fechada.
+            </p>
+          </div>
+
+          <button
+            onClick={handleSaveMensagem}
+            disabled={savingMensagem || !mensagemFechadoState.trim()}
+            className="px-4 py-2 rounded-xl text-sm font-600 transition-opacity disabled:opacity-40 hover:opacity-85"
+            style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
+          >
+            {savingMensagem ? 'Salvando...' : 'Salvar Mensagem'}
           </button>
         </div>
       </div>

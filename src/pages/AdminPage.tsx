@@ -408,6 +408,8 @@ export default function AdminPage() {
                 session={session}
                 nomeLoja={nomeLoja}
                 logoUrl={currentLogo}
+                lojaAberta={merchant?.loja_aberta ?? true}
+                mensagemFechado={merchant?.mensagem_fechado ?? 'Estamos fechados no momento. Volte em breve!'}
                 onLogoUpdated={(url) => { setLogoUrl(url); handleRefresh(); }}
                 onToast={toast}
               />
