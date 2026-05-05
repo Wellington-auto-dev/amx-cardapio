@@ -34,6 +34,7 @@ interface Indicadores {
   clientes_inativos: number;
   ltv_medio: string;
   ltv_total: string;
+  ltv_mes_atual: string;
   gap_medio_carteira: number;
   total_convertidos: number;
   total_tentativas: number;
@@ -261,9 +262,9 @@ export function Carteira({ session }: CarteiraProps) {
         </div>
 
         <IndCard
-          label="LTV da Carteira"
-          value={formatCurrency(Number(ind.ltv_total))}
-          sub={`Media: ${formatCurrency(Number(ind.ltv_medio))}`}
+          label="LTV do Mês"
+          value={formatCurrency(Number(ind.ltv_mes_atual))}
+          sub={`Total acumulado: ${formatCurrency(Number(ind.ltv_total))}`}
         />
 
         <IndCard
@@ -369,8 +370,8 @@ export function Carteira({ session }: CarteiraProps) {
                   </span>
 
                   {/* LTV */}
-                  <span className="text-xs font-700 hidden md:block" style={{ color: 'var(--color-primary)' }}>
-                    {formatCurrency(Number(cliente.ltv))}
+                  <span className="text-xs hidden md:block" style={{ color: 'var(--color-text-secondary)' }}>
+                    LTV: <span className="font-700" style={{ color: 'var(--color-primary)' }}>{formatCurrency(Number(cliente.ltv))}</span>
                   </span>
 
                   {/* Status badge */}

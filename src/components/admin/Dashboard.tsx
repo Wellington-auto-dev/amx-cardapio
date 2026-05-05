@@ -15,6 +15,7 @@ interface DashData {
   total_pedidos: number;
   pedidos_diretos: number;
   ltv_medio: number;
+  ticket_medio?: string;
   total_followups: number;
   total_itens: number;
   itens_ativos: number;
@@ -754,9 +755,9 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
           }
         />
         <MetricCard
-          label="LTV Médio"
-          value={formatCurrency(Number(dash.ltv_medio))}
-          sub="por cliente capturado"
+          label="Ticket Médio"
+          value={formatCurrency(Number(dash.ticket_medio ?? dash.ltv_medio))}
+          sub="por pedido direto"
           accent="#60A5FA"
           icon={
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">

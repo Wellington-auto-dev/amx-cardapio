@@ -193,6 +193,7 @@ export async function fetchCarteira(
     clientes_inativos: number;
     ltv_medio: string;
     ltv_total: string;
+    ltv_mes_atual: string;
     gap_medio_carteira: number;
     total_convertidos: number;
     total_tentativas: number;
