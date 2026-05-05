@@ -421,16 +421,6 @@ export default function AdminPage() {
           {/* Page content */}
           <main className="flex-1 w-full px-6 py-5 space-y-4">
 
-            {session && (
-              <StoreSettings
-                session={session}
-                nomeLoja={nomeLoja}
-                logoUrl={currentLogo}
-                onLogoUpdated={(url) => { setLogoUrl(url); handleRefresh(); }}
-                onToast={toast}
-              />
-            )}
-
             <div
               className="rounded-2xl overflow-hidden"
               style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
@@ -508,13 +498,22 @@ export default function AdminPage() {
                 )}
 
                 {activeTab === 7 && session && (
-                  <Configuracoes
-                    session={session}
-                    slug={slug}
-                    lojaAberta={merchant?.loja_aberta ?? true}
-                    mensagemFechado={merchant?.mensagem_fechado ?? 'Estamos fechados no momento. Volte em breve!'}
-                    horarios={merchant?.horarios}
-                  />
+                  <div className="space-y-4">
+                    <StoreSettings
+                      session={session}
+                      nomeLoja={nomeLoja}
+                      logoUrl={currentLogo}
+                      onLogoUpdated={(url) => { setLogoUrl(url); handleRefresh(); }}
+                      onToast={toast}
+                    />
+                    <Configuracoes
+                      session={session}
+                      slug={slug}
+                      lojaAberta={merchant?.loja_aberta ?? true}
+                      mensagemFechado={merchant?.mensagem_fechado ?? 'Estamos fechados no momento. Volte em breve!'}
+                      horarios={merchant?.horarios}
+                    />
+                  </div>
                 )}
               </div>
             </div>
