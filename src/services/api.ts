@@ -398,7 +398,7 @@ export async function buscarSaldoClubVip(
   club_ativo: boolean;
   pontos_atuais?: number;
   pontos_por_compra?: number;
-  proximo_nivel?: { meta_pontos: number; brinde: string };
+  proximo_nivel?: { meta_pontos: number; brinde: string; faltam?: number };
 }> {
   const { data } = await api.post('/amx-clubvip-saldo', {
     merchant_id: merchantId,
