@@ -118,6 +118,107 @@ export function parsePlanilha(file: File): Promise<ParsedPlanilha> {
   });
 }
 
+// ─── Exportar carteira ─────────────────────────────────────────────────────
+
+export function exportarCarteira(clientes: {
+  nome: string;
+  phone: string;
+  total_pedidos: number;
+  ltv: string;
+  ultimo_pedido: string;
+  gap_medio: number | null;
+  status_cliente: string;
+}[]): void {
+  const wb = XLSX.utils.book_new();
+
+  const rows: unknown[][] = [
+    ['Nome', 'Telefone', 'Total de Pedidos', 'LTV (R$)', 'Ultimo Pedido', 'Gap Medio (dias)', 'Status'],
+    ...clientes.map((c) => [
+      c.nome,
+      c.phone,
+      c.total_pedidos,
+      Number(c.ltv),
+      c.ultimo_pedido
+        ? new Date(c.ultimo_pedido).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        : '',
+      c.gap_medio ?? '',
+      c.status_cliente,
+    ]),
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1'].forEach((ref) => {
+    if (ws[ref]) ws[ref].s = { font: { bold: true } };
+  });
+  ws['!cols'] = [{ wch: 24 }, { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+  XLSX.writeFile(wb, 'carteira_clientes.xlsx');
+}
+
+// ─── Exportar pedidos ──────────────────────────────────────────────────────
+
+export function exportarPedidos(pedidos: {
+  id: string;
+  cliente_nome: string;
+  cliente_phone: string | null;
+  itens: { nome: string; preco: number; quantidade: number }[];
+  total: string;
+  forma_pagamento: string;
+  status: string;
+  criado_em: string;
+}[]): void {
+  const wb = XLSX.utils.book_new();
+
+  const rows: unknown[][] = [
+    ['ID', 'Cliente', 'Telefone', 'Itens', 'Total (R$)', 'Forma de Pagamento', 'Status', 'Data'],
+    ...pedidos.map((p) => [
+      p.id,
+      p.cliente_nome,
+      p.cliente_phone ?? '',
+      p.itens.map((i) => `${i.quantidade}x ${i.nome}`).join(', '),
+      Number(p.total),
+      p.forma_pagamento,
+      p.status,
+      p.criado_em
+        ? new Date(p.criado_em).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+        : '',
+    ]),
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1'].forEach((ref) => {
+    if (ws[ref]) ws[ref].s = { font: { bold: true } };
+  });
+  ws['!cols'] = [{ wch: 36 }, { wch: 22 }, { wch: 18 }, { wch: 44 }, { wch: 12 }, { wch: 20 }, { wch: 12 }, { wch: 18 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
+  XLSX.writeFile(wb, 'historico_pedidos.xlsx');
+}
+
+// ─── Exportar cardapio ─────────────────────────────────────────────────────
+
+export function exportarCardapio(itens: {
+  categoria: string;
+  nome: string;
+  descricao: string;
+  preco: number;
+  disponivel: string;
+}[]): void {
+  const wb = XLSX.utils.book_new();
+
+  const rows: unknown[][] = [
+    ['categoria', 'nome', 'descricao', 'preco', 'disponivel'],
+    ...itens.map((i) => [i.categoria, i.nome, i.descricao, i.preco, i.disponivel]),
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ['A1', 'B1', 'C1', 'D1', 'E1'].forEach((ref) => {
+    if (ws[ref]) ws[ref].s = { font: { bold: true } };
+  });
+  ws['!cols'] = [{ wch: 18 }, { wch: 22 }, { wch: 32 }, { wch: 10 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws, 'Itens');
+  XLSX.writeFile(wb, 'cardapio_export.xlsx');
+}
+
 /**
  * Combina as duas abas da planilha no formato esperado pelo endpoint.
  */

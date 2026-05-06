@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import type { Categoria, Item } from '@/types/catalog';
 import type { AdminSession } from '@/types/admin';
 import { atualizarDisponibilidade, deletarItem, editarItem, reordenarItens } from '@/services/api';
+import { exportarCardapio } from '@/services/excel';
 import { uploadImagem } from '@/services/cloudinary';
 import { Toggle } from '@/components/ui/Toggle';
 import { Badge } from '@/components/ui/Badge';
@@ -494,8 +495,39 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
     );
   }
 
+  const handleExportarCardapio = () => {
+    const itensFlat = localCategorias.flatMap((cat) =>
+      cat.itens.map((item) => ({
+        categoria: cat.nome,
+        nome: item.nome,
+        descricao: item.descricao,
+        preco: item.preco,
+        disponivel: item.disponivel ? 'sim' : 'nao',
+      })),
+    );
+    exportarCardapio(itensFlat);
+  };
+
   return (
     <>
+      <div className="flex items-center justify-end mb-3">
+        <button
+          onClick={handleExportarCardapio}
+          className="flex items-center gap-1.5 text-xs font-600 px-3 py-2 rounded-xl transition-opacity hover:opacity-70"
+          style={{
+            backgroundColor: 'var(--color-surface-2)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-secondary)',
+            cursor: 'pointer',
+          }}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-6.707a1 1 0 011.414 0L9 11.586V3a1 1 0 112 0v8.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+          Exportar
+        </button>
+      </div>
+
       {hasChanges && (
         <div className="flex justify-end mb-3">
           <button
