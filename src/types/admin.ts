@@ -49,6 +49,37 @@ export interface PlanilhaGrupoRow {
   preco_adicional: number;
 }
 
+// Club VIP
+export interface ClubVipConfig {
+  ativo: boolean;
+  valor_minimo: number;
+  pontos_por_compra: number;
+}
+
+export interface ClubVipNivel {
+  id: string;
+  meta_pontos: number;
+  brinde: string;
+  ativo: boolean;
+  criado_em: string;
+}
+
+export interface ClubVipSaldo {
+  nome: string;
+  phone: string;
+  pontos: number;
+  total_resgatado: number;
+}
+
+export interface ClubVipResgate {
+  id: string;
+  cliente_nome: string;
+  cliente_phone: string;
+  brinde: string;
+  utilizado: boolean;
+  criado_em: string;
+}
+
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 export interface ToastMessage {

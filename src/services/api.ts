@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { Merchant } from '@/types/catalog';
-import type { ItemManualPayload } from '@/types/admin';
+import type { ItemManualPayload, ClubVipConfig, ClubVipNivel, ClubVipSaldo, ClubVipResgate } from '@/types/admin';
 import type { ParsedPlanilha } from '@/services/excel';
 import { montarPayloadPlanilha } from '@/services/excel';
 
@@ -352,6 +352,57 @@ export async function validarOperador(tokenMaster: string): Promise<{
 }> {
   const { data } = await api.post('/amx-operador-lojas', {
     token_master: tokenMaster,
+  });
+  return data;
+}
+
+// ─── Club VIP ─────────────────────────────────────────────────────────────
+
+export async function buscarClubVipDashboard(
+  merchantId: string,
+  token: string,
+): Promise<{
+  sucesso: boolean;
+  config: ClubVipConfig;
+  niveis: ClubVipNivel[];
+  saldos: ClubVipSaldo[];
+  resgates: ClubVipResgate[];
+}> {
+  const { data } = await api.post('/amx-clubvip-dashboard', {
+    merchant_id: merchantId,
+    token,
+  });
+  return data;
+}
+
+export async function configurarClubVip(
+  merchantId: string,
+  token: string,
+  acao: string,
+  payload: object,
+): Promise<{ sucesso: boolean; mensagem?: string; nivel?: ClubVipNivel; erro?: string }> {
+  const { data } = await api.post('/amx-clubvip-configurar', {
+    merchant_id: merchantId,
+    token,
+    acao,
+    ...payload,
+  });
+  return data;
+}
+
+export async function buscarSaldoClubVip(
+  merchantId: string,
+  phone: string,
+): Promise<{
+  sucesso: boolean;
+  club_ativo: boolean;
+  pontos_atuais?: number;
+  pontos_por_compra?: number;
+  proximo_nivel?: { meta_pontos: number; brinde: string };
+}> {
+  const { data } = await api.post('/amx-clubvip-saldo', {
+    merchant_id: merchantId,
+    phone,
   });
   return data;
 }
