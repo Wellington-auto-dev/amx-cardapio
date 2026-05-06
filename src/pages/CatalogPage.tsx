@@ -9,7 +9,7 @@ import { ItemCard } from '@/components/catalog/ItemCard';
 import { ItemModal } from '@/components/catalog/ItemModal';
 import { CartButton } from '@/components/catalog/CartButton';
 import { CartDrawer, CartSidebar } from '@/components/catalog/CartDrawer';
-import { ClubVipBanner } from '@/components/catalog/ClubVipBanner';
+// import { ClubVipBanner } from '@/components/catalog/ClubVipBanner';
 import { ToastContainer } from '@/components/ui/Toast';
 import { ItemCardSkeleton, HeaderSkeleton, TabsSkeleton } from '@/components/ui/Skeleton';
 import { abrirWhatsApp } from '@/services/whatsapp';
@@ -320,16 +320,9 @@ export default function CatalogPage() {
         {/* Items */}
         <main className="flex-1 min-w-0 p-4 md:p-0 space-y-8 pb-28 md:pb-8">
           {!isLoading && (
-            <ClubVipBanner
-              phone={phone}
-              setPhone={handleSetPhone}
-              clubAtivo={clubVip.clubAtivo}
-              pontosAtuais={clubVip.pontosAtuais}
-              pontosPorCompra={clubVip.pontosPorCompra}
-              proximoNivel={clubVip.proximoNivel}
-              isLoading={clubVip.isLoading}
-              hasChecked={clubVip.hasChecked}
-            />
+            <div style={{ background: 'red', color: 'white', padding: '12px', textAlign: 'center' }}>
+              CLUBE VIP PLACEHOLDER
+            </div>
           )}
 
           {isLoading ? (
