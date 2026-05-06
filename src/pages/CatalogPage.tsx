@@ -89,6 +89,13 @@ export default function CatalogPage() {
 
   const clubVip = useClubVip(merchant?.merchant_id ?? '', phone);
 
+  useEffect(() => {
+    if (!document.documentElement.hasAttribute('data-theme')) {
+      const saved = localStorage.getItem('amx-tema');
+      document.documentElement.setAttribute('data-theme', saved ?? 'dark');
+    }
+  }, []);
+
   const [activeCategory, setActiveCategory] = useState('');
   const [modalItem, setModalItem] = useState<Item | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -321,6 +328,7 @@ export default function CatalogPage() {
               pontosPorCompra={clubVip.pontosPorCompra}
               proximoNivel={clubVip.proximoNivel}
               isLoading={clubVip.isLoading}
+              hasChecked={clubVip.hasChecked}
             />
           )}
 

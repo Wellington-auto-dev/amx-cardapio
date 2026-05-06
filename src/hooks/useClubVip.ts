@@ -9,6 +9,7 @@ interface ProximoNivel {
 
 export function useClubVip(merchantId: string, phone: string | null) {
   const [isLoading, setIsLoading] = useState(false);
+  const [hasChecked, setHasChecked] = useState(false);
   const [clubAtivo, setClubAtivo] = useState(false);
   const [pontosAtuais, setPontosAtuais] = useState(0);
   const [pontosPorCompra, setPontosPorCompra] = useState(1);
@@ -19,11 +20,13 @@ export function useClubVip(merchantId: string, phone: string | null) {
       setClubAtivo(false);
       setPontosAtuais(0);
       setProximoNivel(null);
+      setHasChecked(false);
       return;
     }
 
     let cancelled = false;
     setIsLoading(true);
+    setHasChecked(false);
 
     buscarSaldoClubVip(merchantId, phone)
       .then((res) => {
@@ -47,11 +50,14 @@ export function useClubVip(merchantId: string, phone: string | null) {
         }
       })
       .finally(() => {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+          setHasChecked(true);
+        }
       });
 
     return () => { cancelled = true; };
   }, [merchantId, phone]);
 
-  return { clubAtivo, pontosAtuais, pontosPorCompra, proximoNivel, isLoading };
+  return { clubAtivo, pontosAtuais, pontosPorCompra, proximoNivel, isLoading, hasChecked };
 }

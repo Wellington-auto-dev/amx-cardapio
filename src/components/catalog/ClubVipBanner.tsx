@@ -14,6 +14,7 @@ interface ClubVipBannerProps {
   pontosPorCompra: number;
   proximoNivel: ProximoNivel | null;
   isLoading: boolean;
+  hasChecked: boolean;
 }
 
 // ─── Ícone estrela ─────────────────────────────────────────────────────────
@@ -239,9 +240,10 @@ export function ClubVipBanner({
   pontosPorCompra,
   proximoNivel,
   isLoading,
+  hasChecked,
 }: ClubVipBannerProps) {
-  // Com phone e loading: mostrar skeleton
-  if (phone && isLoading) return <BannerSkeleton />;
+  // Com phone e loading (ou ainda não verificou): mostrar skeleton
+  if (phone && (isLoading || !hasChecked)) return <BannerSkeleton />;
 
   // Com phone e club ativo: mostrar pontos
   if (phone && clubAtivo) {
@@ -256,8 +258,8 @@ export function ClubVipBanner({
     );
   }
 
-  // Com phone mas club inativo (ou erro): silencioso
-  if (phone && !isLoading && !clubAtivo) return null;
+  // Com phone, já verificou e club inativo (ou erro): silencioso
+  if (phone && hasChecked && !clubAtivo) return null;
 
   // Sem phone: prompt compacto de identificação
   return <PhonePrompt setPhone={setPhone} />;
