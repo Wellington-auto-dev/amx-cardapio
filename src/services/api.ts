@@ -334,6 +334,28 @@ export async function fetchPedidos(
   return data;
 }
 
+// ─── Operador multi-loja ──────────────────────────────────────────────────
+
+export async function validarOperador(tokenMaster: string): Promise<{
+  sucesso: boolean;
+  operador?: { id: string; nome: string; email: string };
+  lojas?: {
+    merchant_id: string;
+    nome: string;
+    slug: string;
+    logo_url: string | null;
+    loja_aberta: boolean;
+    cardapio_ativo: boolean;
+    token_admin: string;
+  }[];
+  erro?: string;
+}> {
+  const { data } = await api.post('/amx-operador-lojas', {
+    token_master: tokenMaster,
+  });
+  return data;
+}
+
 // ─── Chat ─────────────────────────────────────────────────────────────────
 
 export async function fetchChat(
