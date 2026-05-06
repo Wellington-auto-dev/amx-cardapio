@@ -1,4 +1,19 @@
 import { useRef, useState, useEffect } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { Categoria, Item } from '@/types/catalog';
 import type { AdminSession } from '@/types/admin';
 import { atualizarDisponibilidade, deletarItem, editarItem, reordenarItens } from '@/services/api';
@@ -34,6 +49,23 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--color-text-secondary)',
   marginBottom: 6,
 };
+
+// ─── Drag Handle Icon ──────────────────────────────────────────────────────
+
+function DragDots() {
+  return (
+    <svg viewBox="0 0 10 16" fill="currentColor" className="w-2.5 h-4">
+      <circle cx="2" cy="2" r="1.5" />
+      <circle cx="8" cy="2" r="1.5" />
+      <circle cx="2" cy="6" r="1.5" />
+      <circle cx="8" cy="6" r="1.5" />
+      <circle cx="2" cy="10" r="1.5" />
+      <circle cx="8" cy="10" r="1.5" />
+      <circle cx="2" cy="14" r="1.5" />
+      <circle cx="8" cy="14" r="1.5" />
+    </svg>
+  );
+}
 
 // ─── Delete Modal ──────────────────────────────────────────────────────────
 
@@ -160,7 +192,6 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
         className="relative w-full md:max-w-lg z-10 rounded-t-2xl md:rounded-2xl overflow-hidden"
         style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
       >
-        {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4"
           style={{ borderBottom: '1px solid var(--color-border)' }}
@@ -177,7 +208,6 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -247,7 +277,7 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
                 type="button"
                 onClick={() => fotoInputRef.current?.click()}
                 disabled={uploading}
-                className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-600 hover:opacity-85 disabled:opacity-50 flex items-center gap-1.5 transition-opacity"
+                className="shrink-0 px-3 py-2 rounded-xl text-xs font-600 hover:opacity-85 disabled:opacity-50 flex items-center gap-1.5 transition-opacity"
                 style={{ backgroundColor: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
               >
                 {uploading ? (
@@ -264,7 +294,7 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
                 <img
                   src={form.foto_url}
                   alt="preview"
-                  className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                  className="w-12 h-12 rounded-xl object-cover shrink-0"
                   style={{ border: '1px solid var(--color-border)' }}
                   onError={() => setPreviewError(true)}
                 />
@@ -304,18 +334,17 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
   );
 }
 
-// ─── Item Row ──────────────────────────────────────────────────────────────
+// ─── Sortable Item Row ─────────────────────────────────────────────────────
 
-function ItemRow({ item, categoria, session, onEdit, onDelete, onToast, onMoveUp, onMoveDown }: {
+function SortableItemRow({ item, categoria, session, onEdit, onDelete, onToast }: {
   item: Item;
   categoria: string;
   session: AdminSession;
   onEdit: (item: Item, categoria: string) => void;
   onDelete: (item: Item) => void;
   onToast: ItemListProps['onToast'];
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const [disponivel, setDisponivel] = useState(item.disponivel);
   const [loading, setLoading] = useState(false);
 
@@ -332,47 +361,44 @@ function ItemRow({ item, categoria, session, onEdit, onDelete, onToast, onMoveUp
     }
   };
 
-  const arrowBtn: React.CSSProperties = {
-    color: 'var(--color-text-muted)',
-    backgroundColor: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    padding: 2,
-  };
-
   return (
-    <div className="flex items-center gap-2 py-3" style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-      {/* Order arrows */}
-      <div className="flex flex-col gap-0.5 shrink-0">
-        <button
-          onClick={onMoveUp}
-          disabled={!onMoveUp}
-          aria-label={`Mover ${item.nome} para cima`}
-          className="transition-opacity hover:opacity-100 disabled:opacity-15"
-          style={{ ...arrowBtn, opacity: onMoveUp ? 0.4 : 0.15 }}
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-            <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
-        <button
-          onClick={onMoveDown}
-          disabled={!onMoveDown}
-          aria-label={`Mover ${item.nome} para baixo`}
-          className="transition-opacity hover:opacity-100 disabled:opacity-15"
-          style={{ ...arrowBtn, opacity: onMoveDown ? 0.4 : 0.15 }}
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
-      </div>
+    <div
+      ref={setNodeRef}
+      className="flex items-center gap-2 py-3"
+      style={{
+        borderBottom: '1px solid var(--color-border-subtle)',
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+        position: 'relative',
+        zIndex: isDragging ? 1 : undefined,
+        backgroundColor: isDragging ? 'var(--color-surface-2)' : undefined,
+      }}
+    >
+      {/* Drag handle */}
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="opacity-25 hover:opacity-70 transition-opacity shrink-0"
+        style={{
+          color: 'var(--color-text-muted)',
+          backgroundColor: 'transparent',
+          border: 'none',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          padding: 2,
+          touchAction: 'none',
+        }}
+        aria-label={`Arrastar ${item.nome} para reordenar`}
+      >
+        <DragDots />
+      </button>
 
       {item.foto_url && (
         <img
           src={item.foto_url}
           alt={item.nome}
-          className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+          className="w-10 h-10 rounded-lg object-cover shrink-0"
           loading="lazy"
         />
       )}
@@ -417,31 +443,43 @@ function ItemRow({ item, categoria, session, onEdit, onDelete, onToast, onMoveUp
 
 export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }: ItemListProps) {
   const [localCategorias, setLocalCategorias] = useState<Categoria[]>(categorias);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [savingOrder, setSavingOrder] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
   useEffect(() => {
     setLocalCategorias(categorias);
-    setHasChanges(false);
   }, [categorias]);
 
   const totalItens = localCategorias.reduce((s, c) => s + c.itens.length, 0);
   const categoriasExistentes = localCategorias.map((c) => c.nome);
 
-  const moveItem = (catNome: string, idx: number, dir: 'up' | 'down') => {
-    setLocalCategorias((prev) =>
-      prev.map((cat) => {
-        if (cat.nome !== catNome) return cat;
-        const itens = [...cat.itens];
-        const newIdx = dir === 'up' ? idx - 1 : idx + 1;
-        [itens[idx], itens[newIdx]] = [itens[newIdx], itens[idx]];
-        return { ...cat, itens };
-      }),
+  const handleDragEnd = (event: DragEndEvent, catNome: string) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const cat = localCategorias.find((c) => c.nome === catNome);
+    if (!cat) return;
+
+    const oldIdx = cat.itens.findIndex((i) => i.id === active.id);
+    const newIdx = cat.itens.findIndex((i) => i.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+
+    const newItens = arrayMove(cat.itens, oldIdx, newIdx);
+    const updated = localCategorias.map((c) =>
+      c.nome === catNome ? { ...c, itens: newItens } : c,
     );
-    setHasChanges(true);
+    setLocalCategorias(updated);
+
+    let ordem = 0;
+    const payload = updated.flatMap((c) => c.itens.map((item) => ({ id: item.id, ordem: ordem++ })));
+    reordenarItens(session.merchant_id, session.token, payload)
+      .then(() => onToast('success', 'Ordem atualizada!'))
+      .catch(() => onToast('error', 'Erro ao salvar ordem'));
   };
 
   const confirmDelete = async () => {
@@ -456,24 +494,6 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
     } finally {
       setDeleting(false);
       setItemToDelete(null);
-    }
-  };
-
-  const handleSaveOrder = async () => {
-    setSavingOrder(true);
-    try {
-      let ordem = 0;
-      const itens = localCategorias.flatMap((cat) =>
-        cat.itens.map((item) => ({ id: item.id, ordem: ordem++ })),
-      );
-      await reordenarItens(session.merchant_id, session.token, itens);
-      onToast('success', 'Ordem salva com sucesso!');
-      setHasChanges(false);
-      onRefresh();
-    } catch {
-      onToast('error', 'Erro ao salvar ordem');
-    } finally {
-      setSavingOrder(false);
     }
   };
 
@@ -528,20 +548,6 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
         </button>
       </div>
 
-      {hasChanges && (
-        <div className="flex justify-end mb-3">
-          <button
-            onClick={handleSaveOrder}
-            disabled={savingOrder}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-600 transition-opacity disabled:opacity-50 hover:opacity-85"
-            style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D', cursor: 'pointer' }}
-          >
-            {savingOrder && <div className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin" />}
-            {savingOrder ? 'Salvando...' : 'Salvar Ordem'}
-          </button>
-        </div>
-      )}
-
       <div className="space-y-3">
         {localCategorias.map((cat) => (
           <div
@@ -562,19 +568,28 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
               </span>
             </div>
             <div className="px-4">
-              {cat.itens.map((item, idx) => (
-                <ItemRow
-                  key={item.id}
-                  item={item}
-                  categoria={cat.nome}
-                  session={session}
-                  onEdit={(i, c) => setEditTarget({ item: i, categoria: c })}
-                  onDelete={setItemToDelete}
-                  onToast={onToast}
-                  onMoveUp={idx > 0 ? () => moveItem(cat.nome, idx, 'up') : undefined}
-                  onMoveDown={idx < cat.itens.length - 1 ? () => moveItem(cat.nome, idx, 'down') : undefined}
-                />
-              ))}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(e) => handleDragEnd(e, cat.nome)}
+              >
+                <SortableContext
+                  items={cat.itens.map((i) => i.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {cat.itens.map((item) => (
+                    <SortableItemRow
+                      key={item.id}
+                      item={item}
+                      categoria={cat.nome}
+                      session={session}
+                      onEdit={(i, c) => setEditTarget({ item: i, categoria: c })}
+                      onDelete={setItemToDelete}
+                      onToast={onToast}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
             </div>
           </div>
         ))}

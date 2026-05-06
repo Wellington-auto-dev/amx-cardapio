@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { Merchant } from '@/types/catalog';
-import type { ItemManualPayload, ClubVipConfig, ClubVipNivel, ClubVipSaldo, ClubVipResgate } from '@/types/admin';
+import type { ItemManualPayload, ClubVipConfig, ClubVipNivel, ClubVipSaldo, ClubVipResgate, CategoriaOrdem } from '@/types/admin';
 import type { ParsedPlanilha } from '@/services/excel';
 import { montarPayloadPlanilha } from '@/services/excel';
 
@@ -403,6 +403,38 @@ export async function buscarSaldoClubVip(
   const { data } = await api.post('/amx-clubvip-saldo', {
     merchant_id: merchantId,
     phone,
+  });
+  return data;
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────────────
+
+// ─── Categorias ───────────────────────────────────────────────────────────
+
+// TODO (n8n M3): acao 'buscar_categorias' → SELECT nome, ordem FROM menu_categorias WHERE merchant_id ORDER BY ordem ASC
+export async function buscarCategorias(
+  merchantId: string,
+  token: string,
+): Promise<{ sucesso: boolean; categorias: CategoriaOrdem[] }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'buscar_categorias',
+  });
+  return data;
+}
+
+// TODO (n8n M3): acao 'reordenar_categorias' → UPDATE menu_categorias SET ordem usando jsonb_to_recordset
+export async function reordenarCategorias(
+  merchantId: string,
+  token: string,
+  categorias: CategoriaOrdem[],
+): Promise<{ sucesso: boolean }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'reordenar_categorias',
+    categorias,
   });
   return data;
 }

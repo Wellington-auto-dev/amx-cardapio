@@ -12,6 +12,7 @@ import { Chat } from '@/components/admin/Chat';
 import { Pedidos } from '@/components/admin/Pedidos';
 import { ImportCard } from '@/components/admin/ImportCard';
 import { ItemList } from '@/components/admin/ItemList';
+import { CategoriaList } from '@/components/admin/CategoriaList';
 import { ManualItemForm } from '@/components/admin/ManualItemForm';
 import { Promocoes } from '@/components/admin/Promocoes';
 import { ToastContainer } from '@/components/ui/Toast';
@@ -485,6 +486,22 @@ export default function AdminPage() {
                         Atualizar
                       </button>
                     </div>
+
+                    {session && categorias.length > 0 && (
+                      <div>
+                        <p className="text-xs font-700 uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                          Ordem das Categorias
+                        </p>
+                        <CategoriaList
+                          categorias={categorias}
+                          session={session}
+                          onToast={toast}
+                        />
+                      </div>
+                    )}
+
+                    <div style={{ borderTop: '1px solid var(--color-border)' }} />
+
                     {session && (
                       <ItemList
                         categorias={categorias}

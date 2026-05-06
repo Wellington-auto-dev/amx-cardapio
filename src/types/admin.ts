@@ -80,6 +80,11 @@ export interface ClubVipResgate {
   criado_em: string;
 }
 
+export interface CategoriaOrdem {
+  nome: string;
+  ordem: number;
+}
+
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 export interface ToastMessage {
