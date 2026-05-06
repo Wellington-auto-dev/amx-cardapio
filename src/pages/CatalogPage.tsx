@@ -1,15 +1,13 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/useToast';
-import { useClubVip } from '@/hooks/useClubVip';
 import { CategoryTabs } from '@/components/catalog/CategoryTabs';
 import { ItemCard } from '@/components/catalog/ItemCard';
 import { ItemModal } from '@/components/catalog/ItemModal';
 import { CartButton } from '@/components/catalog/CartButton';
 import { CartDrawer, CartSidebar } from '@/components/catalog/CartDrawer';
-// import { ClubVipBanner } from '@/components/catalog/ClubVipBanner';
 import { ToastContainer } from '@/components/ui/Toast';
 import { ItemCardSkeleton, HeaderSkeleton, TabsSkeleton } from '@/components/ui/Skeleton';
 import { abrirWhatsApp } from '@/services/whatsapp';
@@ -73,28 +71,6 @@ export default function CatalogPage() {
   const { data: merchant, isLoading, isError } = useCatalog(slug);
   const cart = useCart();
   const { toasts, addToast, removeToast } = useToast();
-
-  const [phone, setPhoneState] = useState<string | null>(
-    () => localStorage.getItem('amx-phone') || null,
-  );
-
-  const handleSetPhone = useCallback((p: string) => {
-    if (p) {
-      localStorage.setItem('amx-phone', p);
-    } else {
-      localStorage.removeItem('amx-phone');
-    }
-    setPhoneState(p || null);
-  }, []);
-
-  const clubVip = useClubVip(merchant?.merchant_id ?? '', phone);
-
-  useLayoutEffect(() => {
-    if (!document.documentElement.hasAttribute('data-theme')) {
-      const saved = localStorage.getItem('amx-tema');
-      document.documentElement.setAttribute('data-theme', saved ?? 'dark');
-    }
-  }, []);
 
   const [activeCategory, setActiveCategory] = useState('');
   const [modalItem, setModalItem] = useState<Item | null>(null);
@@ -319,11 +295,9 @@ export default function CatalogPage() {
 
         {/* Items */}
         <main className="flex-1 min-w-0 p-4 md:p-0 space-y-8 pb-28 md:pb-8">
-          {!isLoading && (
-            <div style={{ background: 'red', color: 'white', padding: '12px', textAlign: 'center' }}>
-              CLUBE VIP PLACEHOLDER
-            </div>
-          )}
+          <div style={{ background: 'red', color: 'white', padding: '12px', textAlign: 'center' }}>
+            CLUBE VIP PLACEHOLDER
+          </div>
 
           {isLoading ? (
             <div className="space-y-3">
