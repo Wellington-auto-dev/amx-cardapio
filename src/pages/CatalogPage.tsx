@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useCart } from '@/hooks/useCart';
@@ -89,7 +89,7 @@ export default function CatalogPage() {
 
   const clubVip = useClubVip(merchant?.merchant_id ?? '', phone);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!document.documentElement.hasAttribute('data-theme')) {
       const saved = localStorage.getItem('amx-tema');
       document.documentElement.setAttribute('data-theme', saved ?? 'dark');

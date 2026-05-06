@@ -242,6 +242,8 @@ export function ClubVipBanner({
   isLoading,
   hasChecked,
 }: ClubVipBannerProps) {
+  console.log('[ClubVipBanner] render — phone:', phone, 'isLoading:', isLoading, 'hasChecked:', hasChecked, 'clubAtivo:', clubAtivo);
+
   // Com phone e loading (ou ainda não verificou): mostrar skeleton
   if (phone && (isLoading || !hasChecked)) return <BannerSkeleton />;
 
