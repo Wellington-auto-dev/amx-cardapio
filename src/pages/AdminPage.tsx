@@ -23,7 +23,7 @@ const NAV_ITEMS = [
   {
     label: 'Dashboard',
     icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
         <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
       </svg>
     ),
@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   {
     label: 'Carteira',
     icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
       </svg>
     ),
@@ -39,7 +39,7 @@ const NAV_ITEMS = [
   {
     label: 'Chat',
     icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
         <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
         <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
       </svg>
@@ -48,7 +48,7 @@ const NAV_ITEMS = [
   {
     label: 'Pedidos',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 shrink-0">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
       </svg>
     ),
@@ -56,7 +56,7 @@ const NAV_ITEMS = [
   {
     label: 'Importar',
     icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
         <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
       </svg>
     ),
@@ -64,7 +64,7 @@ const NAV_ITEMS = [
   {
     label: 'Meu Cardápio',
     icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
         <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
         <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
       </svg>
@@ -73,7 +73,7 @@ const NAV_ITEMS = [
   {
     label: 'Adicionar Item',
     icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
       </svg>
     ),
@@ -81,7 +81,7 @@ const NAV_ITEMS = [
   {
     label: 'Configurações',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 shrink-0">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.065 2.571c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.572-1.065c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.571c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.065-2.572c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
@@ -89,7 +89,7 @@ const NAV_ITEMS = [
   {
     label: 'Promocoes',
     icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
       </svg>
     ),
@@ -120,7 +120,7 @@ function SidebarNav({
   return (
     <>
       {/* Header */}
-      <div className="flex-shrink-0 px-4 py-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
+      <div className="shrink-0 px-4 py-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
         {collapsed ? (
           <div className="flex justify-center">
             {logoUrl ? (
@@ -145,12 +145,12 @@ function SidebarNav({
               <img
                 src={logoUrl}
                 alt={nomeLoja}
-                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                className="w-9 h-9 rounded-full object-cover shrink-0"
                 style={{ border: '1px solid var(--color-border)' }}
               />
             ) : (
               <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 flex-shrink-0"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 shrink-0"
                 style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
               >
                 {logoInitial}
@@ -223,7 +223,7 @@ function SidebarNav({
               {!collapsed && item.label}
               {!collapsed && activeTab === i && (
                 <div
-                  className="ml-auto w-1 h-4 rounded-full flex-shrink-0"
+                  className="ml-auto w-1 h-4 rounded-full shrink-0"
                   style={{ backgroundColor: 'var(--color-primary)' }}
                 />
               )}
@@ -317,7 +317,7 @@ export default function AdminPage() {
 
         {/* Desktop sidebar */}
         <aside
-          className="hidden md:flex flex-col flex-shrink-0 sticky top-0 h-screen transition-all duration-300"
+          className="hidden md:flex flex-col shrink-0 sticky top-0 h-screen transition-all duration-300"
           style={{
             width: sidebarCollapsed ? 64 : 224,
             backgroundColor: 'var(--color-surface)',
@@ -327,7 +327,7 @@ export default function AdminPage() {
         >
           {/* Toggle button */}
           <div
-            className="flex-shrink-0 flex px-2 pt-2.5 pb-1"
+            className="shrink-0 flex px-2 pt-2.5 pb-1"
             style={{ justifyContent: sidebarCollapsed ? 'center' : 'flex-end' }}
           >
             <button
@@ -364,7 +364,7 @@ export default function AdminPage() {
 
           {/* Theme toggle footer */}
           <div
-            className="flex-shrink-0 flex items-center px-3 py-3"
+            className="shrink-0 flex items-center px-3 py-3"
             style={{
               borderTop: '1px solid var(--color-border)',
               justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
@@ -373,7 +373,7 @@ export default function AdminPage() {
           >
             <button
               onClick={() => setTema((t) => (t === 'dark' ? 'light' : 'dark'))}
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-opacity hover:opacity-60"
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-opacity hover:opacity-60"
               style={{
                 backgroundColor: 'var(--color-surface-2)',
                 border: '1px solid var(--color-border)',
@@ -425,12 +425,12 @@ export default function AdminPage() {
               <img
                 src={currentLogo}
                 alt={nomeLoja}
-                className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                className="w-7 h-7 rounded-full object-cover shrink-0"
                 style={{ border: '1px solid var(--color-border)' }}
               />
             ) : (
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-700 flex-shrink-0"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-700 shrink-0"
                 style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
               >
                 {logoInitial}
@@ -439,12 +439,12 @@ export default function AdminPage() {
             <p className="text-sm font-700 truncate flex-1" style={{ color: 'var(--color-text)' }}>
               {nomeLoja || 'Minha Loja'}
             </p>
-            <span className="text-xs font-500 flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+            <span className="text-xs font-500 shrink-0" style={{ color: 'var(--color-text-muted)' }}>
               {NAV_ITEMS[activeTab].label}
             </span>
             <button
               onClick={() => setTema((t) => (t === 'dark' ? 'light' : 'dark'))}
-              className="p-1.5 rounded-lg flex-shrink-0 transition-opacity hover:opacity-70"
+              className="p-1.5 rounded-lg shrink-0 transition-opacity hover:opacity-70"
               style={{ color: 'var(--color-text-muted)', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
               aria-label={tema === 'dark' ? 'Tema claro' : 'Tema escuro'}
             >
