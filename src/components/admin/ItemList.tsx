@@ -648,7 +648,8 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
     setSavingDisponibilidade(true);
     try {
       for (const [itemId, novoValor] of pendingToggles) {
-        await atualizarDisponibilidade(session.merchant_id, session.token, itemId, novoValor);
+        const res = await atualizarDisponibilidade(session.merchant_id, session.token, itemId, novoValor);
+        if (res.sucesso === false) throw new Error('sucesso: false');
       }
       setPendingToggles(new Map());
       onToast('success', 'Disponibilidade salva!');

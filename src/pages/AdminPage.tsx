@@ -504,7 +504,8 @@ export default function AdminPage() {
                   />
                 )}
 
-                {activeTab === 5 && (
+                {/* Tab 5 — Meu Cardápio: mantido montado para preservar estado local de disponibilidade */}
+                <div style={{ display: activeTab === 5 ? undefined : 'none' }}>
                   <div className="space-y-4">
                     <div className="flex justify-end">
                       <button
@@ -544,7 +545,7 @@ export default function AdminPage() {
                       />
                     )}
                   </div>
-                )}
+                </div>
 
                 {activeTab === 6 && session && (
                   <ManualItemForm

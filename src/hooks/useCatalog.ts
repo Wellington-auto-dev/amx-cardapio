@@ -6,8 +6,9 @@ export function useCatalog(slug: string) {
   return useQuery<Merchant, Error>({
     queryKey: ['catalog', slug],
     queryFn: () => fetchCardapio(slug),
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
     retry: 2,
     enabled: !!slug,
+    refetchOnWindowFocus: false,
   });
 }
