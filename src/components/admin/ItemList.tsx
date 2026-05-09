@@ -507,39 +507,19 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
 
 // ─── Sortable Item Row ─────────────────────────────────────────────────────
 
-function SortableItemRow({ item, categoria, session, onEdit, onDelete, onToast, onToggled }: {
+function SortableItemRow({ item, categoria, onEdit, onDelete, onToggled }: {
   item: Item;
   categoria: string;
-  session: AdminSession;
   onEdit: (item: Item, categoria: string) => void;
   onDelete: (item: Item) => void;
-  onToast: ItemListProps['onToast'];
   onToggled: (itemId: string, catNome: string, value: boolean) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const [disponivel, setDisponivel] = useState(item.disponivel);
-  const [loading, setLoading] = useState(false);
 
-  const handleToggle = async (checked: boolean) => {
+  const handleToggle = (checked: boolean) => {
     setDisponivel(checked);
-    setLoading(true);
-    try {
-      console.log('[toggle] enviando:', { merchant_id: session.merchant_id, item_id: item.id, disponivel: checked });
-      const res = await atualizarDisponibilidade(session.merchant_id, session.token, item.id, checked);
-      console.log('[toggle] resposta:', res);
-      if (res.sucesso !== false) {
-        onToggled(item.id, categoria, checked);
-      } else {
-        setDisponivel(!checked);
-        onToast('error', 'Erro ao atualizar disponibilidade');
-      }
-    } catch (err) {
-      console.error('[toggle] erro:', err);
-      setDisponivel(!checked);
-      onToast('error', 'Erro ao atualizar disponibilidade');
-    } finally {
-      setLoading(false);
-    }
+    onToggled(item.id, categoria, checked);
   };
 
   return (
@@ -593,7 +573,6 @@ function SortableItemRow({ item, categoria, session, onEdit, onDelete, onToast, 
       <Toggle
         checked={disponivel}
         onChange={handleToggle}
-        disabled={loading}
         ariaLabel={`Disponibilidade de ${item.nome}`}
       />
       <button
@@ -627,6 +606,8 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
   const [itemToDelete, setItemToDelete] = useState<Item | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [pendingToggles, setPendingToggles] = useState<Map<string, boolean>>(new Map());
+  const [savingDisponibilidade, setSavingDisponibilidade] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -656,6 +637,26 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
         ? { ...cat, itens: cat.itens.map(i => i.id === itemId ? { ...i, disponivel: value } : i) }
         : cat
     ));
+    setPendingToggles(prev => {
+      const next = new Map(prev);
+      next.set(itemId, value);
+      return next;
+    });
+  };
+
+  const handleSalvarDisponibilidade = async () => {
+    setSavingDisponibilidade(true);
+    try {
+      for (const [itemId, novoValor] of pendingToggles) {
+        await atualizarDisponibilidade(session.merchant_id, session.token, itemId, novoValor);
+      }
+      setPendingToggles(new Map());
+      onToast('success', 'Disponibilidade salva!');
+    } catch {
+      onToast('error', 'Erro ao salvar disponibilidade');
+    } finally {
+      setSavingDisponibilidade(false);
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent, catNome: string) => {
@@ -734,7 +735,29 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
 
   return (
     <>
-      <div className="flex items-center justify-end mb-3">
+      <div className="flex items-center justify-end gap-2 mb-3">
+        {pendingToggles.size > 0 && (
+          <button
+            onClick={handleSalvarDisponibilidade}
+            disabled={savingDisponibilidade}
+            className="flex items-center gap-1.5 text-xs font-600 px-3 py-2 rounded-xl transition-opacity hover:opacity-85 disabled:opacity-50"
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: '#0D0D0D',
+              cursor: 'pointer',
+              border: 'none',
+            }}
+          >
+            {savingDisponibilidade ? (
+              <div className="w-3.5 h-3.5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+            ) : (
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+            {savingDisponibilidade ? 'Salvando...' : `Salvar Alterações (${pendingToggles.size})`}
+          </button>
+        )}
         <button
           onClick={handleExportarCardapio}
           className="flex items-center gap-1.5 text-xs font-600 px-3 py-2 rounded-xl transition-opacity hover:opacity-70"
@@ -786,10 +809,8 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
                       key={item.id}
                       item={item}
                       categoria={cat.nome}
-                      session={session}
                       onEdit={(i, c) => setEditTarget({ item: i, categoria: c })}
                       onDelete={setItemToDelete}
-                      onToast={onToast}
                       onToggled={handleToggleDisponivel}
                     />
                   ))}
