@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useUser } from '@clerk/clerk-react';
+import { useNavigate } from 'react-router-dom';
 import { validarOperador } from '@/services/api';
 
 type Operador = { id: string; nome: string; email: string };
@@ -15,8 +16,8 @@ type Loja = {
 };
 
 export function useOperador() {
-  const [searchParams] = useSearchParams();
-  const tokenMaster = searchParams.get('token_master') ?? '';
+  const { user, isLoaded } = useUser();
+  const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -24,15 +25,17 @@ export function useOperador() {
   const [lojas, setLojas] = useState<Loja[]>([]);
 
   useEffect(() => {
-    if (!tokenMaster) {
-      setIsError(true);
+    if (!isLoaded) return;
+
+    if (!user) {
+      navigate('/operador/login');
       setIsLoading(false);
       return;
     }
 
     let cancelled = false;
 
-    validarOperador(tokenMaster)
+    validarOperador(user.id)
       .then((res) => {
         if (cancelled) return;
         if (res.sucesso && res.operador) {
@@ -50,7 +53,7 @@ export function useOperador() {
       });
 
     return () => { cancelled = true; };
-  }, [tokenMaster]);
+  }, [isLoaded, user, navigate]);
 
-  return { operador, lojas, isLoading, isError };
+  return { operador, lojas, isLoading: isLoading || !isLoaded, isError };
 }

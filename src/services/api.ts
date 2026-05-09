@@ -336,7 +336,7 @@ export async function fetchPedidos(
 
 // ─── Operador multi-loja ──────────────────────────────────────────────────
 
-export async function validarOperador(tokenMaster: string): Promise<{
+export async function validarOperador(clerkUserId: string): Promise<{
   sucesso: boolean;
   operador?: { id: string; nome: string; email: string };
   lojas?: {
@@ -351,7 +351,7 @@ export async function validarOperador(tokenMaster: string): Promise<{
   erro?: string;
 }> {
   const { data } = await api.post('/amx-operador-lojas', {
-    token_master: tokenMaster,
+    clerk_user_id: clerkUserId,
   });
   return data;
 }
