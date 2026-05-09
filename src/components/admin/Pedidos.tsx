@@ -396,7 +396,7 @@ export function Pedidos({ session }: PedidosProps) {
                     {/* Itens */}
                     <div>
                       <p className="text-[10px] font-600 uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>Itens do Pedido</p>
-                      {pedido.itens.length === 0 ? (
+                      {(pedido.itens ?? []).length === 0 ? (
                         <p className="text-xs py-2" style={{ color: 'var(--color-text-muted)' }}>Sem itens registrados neste pedido.</p>
                       ) : (
                         <table className="w-full text-xs">
@@ -408,7 +408,7 @@ export function Pedidos({ session }: PedidosProps) {
                             </tr>
                           </thead>
                           <tbody>
-                            {pedido.itens.map((item, idx) => (
+                            {(pedido.itens ?? []).map((item, idx) => (
                               <tr key={idx} style={{ borderTop: '1px solid var(--color-border)' }}>
                                 <td className="py-1.5 font-500" style={{ color: 'var(--color-text)' }}>{item.nome}</td>
                                 <td className="py-1.5 text-center font-600" style={{ color: 'var(--color-text-secondary)' }}>{item.quantidade}</td>
