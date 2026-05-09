@@ -409,7 +409,7 @@ export function Carteira({ session }: CarteiraProps) {
                     className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 shrink-0"
                     style={{ backgroundColor: 'rgb(245 166 35 / 0.15)', color: 'var(--color-primary)' }}
                   >
-                    {cliente.nome.charAt(0).toUpperCase()}
+                    {(cliente.nome ?? '?').charAt(0).toUpperCase()}
                   </div>
 
                   {/* Name + phone */}

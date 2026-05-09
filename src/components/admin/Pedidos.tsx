@@ -335,7 +335,7 @@ export function Pedidos({ session }: PedidosProps) {
                     className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 shrink-0"
                     style={{ backgroundColor: 'rgb(245 166 35 / 0.15)', color: 'var(--color-primary)' }}
                   >
-                    {pedido.cliente_nome.charAt(0).toUpperCase()}
+                    {(pedido.cliente_nome ?? '?').charAt(0).toUpperCase()}
                   </div>
 
                   {/* Name + date */}

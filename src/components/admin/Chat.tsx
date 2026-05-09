@@ -111,7 +111,7 @@ export function Chat({ session }: ChatProps) {
               className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-700 flex-shrink-0"
               style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
             >
-              {conversaAberta.nome.charAt(0).toUpperCase()}
+              {(conversaAberta.nome ?? '?').charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-700 truncate" style={{ color: 'var(--color-text)' }}>{conversaAberta.nome}</p>
@@ -195,7 +195,7 @@ export function Chat({ session }: ChatProps) {
                   className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 flex-shrink-0"
                   style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
                 >
-                  {conversa.nome.charAt(0).toUpperCase()}
+                  {(conversa.nome ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
@@ -231,7 +231,7 @@ export function Chat({ session }: ChatProps) {
                   className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 flex-shrink-0"
                   style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
                 >
-                  {conversaAberta.nome.charAt(0).toUpperCase()}
+                  {(conversaAberta.nome ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <p className="text-sm font-700" style={{ color: 'var(--color-text)' }}>

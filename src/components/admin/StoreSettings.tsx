@@ -51,7 +51,7 @@ export function StoreSettings({ session, nomeLoja, logoUrl, onLogoUpdated, onToa
     }
   };
 
-  const inicial = nomeLoja.charAt(0).toUpperCase();
+  const inicial = (nomeLoja ?? '?').charAt(0).toUpperCase();
   const showPreview = inputUrl && !previewError;
 
   const inputStyle: React.CSSProperties = {

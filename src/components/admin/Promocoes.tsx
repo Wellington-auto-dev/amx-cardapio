@@ -362,7 +362,7 @@ function SecaoDashboard({ saldos, resgates }: { saldos: ClubVipSaldo[]; resgates
                   className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-700 flex-shrink-0"
                   style={{ backgroundColor: 'rgb(245 166 35 / 0.15)', color: 'var(--color-primary)' }}
                 >
-                  {s.nome.charAt(0).toUpperCase()}
+                  {(s.nome ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-600 truncate" style={{ color: 'var(--color-text)' }}>{s.nome}</p>

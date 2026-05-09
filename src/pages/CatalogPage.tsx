@@ -190,7 +190,7 @@ export default function CatalogPage() {
     );
   }
 
-  const logoInitial = merchant?.nome_loja.charAt(0).toUpperCase() ?? '';
+  const logoInitial = (merchant?.nome_loja ?? '').charAt(0).toUpperCase();
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--color-background)' }}>

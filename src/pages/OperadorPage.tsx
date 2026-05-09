@@ -82,7 +82,7 @@ type Loja = {
 };
 
 function LojaCard({ loja }: { loja: Loja }) {
-  const initial = loja.nome.charAt(0).toUpperCase();
+  const initial = (loja.nome ?? '?').charAt(0).toUpperCase();
   const adminUrl = `/${loja.slug}/admin?token=${loja.token_admin}`;
 
   return (
