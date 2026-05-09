@@ -23,13 +23,14 @@ interface Conversa {
 }
 
 function formatPhone(phone: string) {
+  if (!phone) return '—';
   const p = phone.replace(/\D/g, '');
   if (p.length === 13) return `+${p.slice(0, 2)} (${p.slice(2, 4)}) ${p.slice(4, 9)}-${p.slice(9)}`;
   return phone;
 }
 
 function formatMensagem(texto: string) {
-  return texto.replace(/\n/g, '<br/>');
+  return (texto ?? '').replace(/\n/g, '<br/>');
 }
 
 export function Chat({ session }: ChatProps) {
@@ -42,9 +43,10 @@ export function Chat({ session }: ChatProps) {
   useEffect(() => {
     fetchChat(session.merchant_id, session.token)
       .then(res => {
-        setConversas(res.conversas);
-        if (res.conversas.length > 0) {
-          setConversaAtiva(res.conversas[0].session_id);
+        const lista = res.conversas ?? [];
+        setConversas(lista);
+        if (lista.length > 0) {
+          setConversaAtiva(lista[0].session_id);
         }
       })
       .catch(() => {})
@@ -57,7 +59,7 @@ export function Chat({ session }: ChatProps) {
   };
 
   const conversasFiltradas = conversas.filter(c =>
-    !busca || c.nome.toLowerCase().includes(busca.toLowerCase()) || c.session_id.includes(busca)
+    !busca || (c.nome ?? '').toLowerCase().includes(busca.toLowerCase()) || (c.session_id ?? '').includes(busca)
   );
 
   const conversaAberta = conversas.find(c => c.session_id === conversaAtiva);
