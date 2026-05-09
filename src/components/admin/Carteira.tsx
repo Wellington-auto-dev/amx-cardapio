@@ -192,6 +192,41 @@ export function Carteira({ session }: CarteiraProps) {
 
   const totalCarteira = ind.clientes_ativos + ind.clientes_em_risco + ind.clientes_inativos;
 
+  if (clientes.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-700" style={{ color: 'var(--color-text)' }}>Carteira de Clientes</h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Nenhum cliente capturado ainda</p>
+          </div>
+          <button
+            onClick={load}
+            className="flex items-center gap-1.5 text-xs font-600 px-3 py-2 rounded-xl transition-opacity hover:opacity-70"
+            style={{ backgroundColor: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            Atualizar
+          </button>
+        </div>
+        <div
+          className="rounded-2xl p-16 flex flex-col items-center gap-4"
+          style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-14 h-14" style={{ color: 'var(--color-text-muted)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <div className="text-center">
+            <p className="text-sm font-600" style={{ color: 'var(--color-text)' }}>Nenhum cliente na carteira ainda</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Os clientes aparecerao aqui apos a primeira captura via QR Code ou WhatsApp</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
 
@@ -371,7 +406,7 @@ export function Carteira({ session }: CarteiraProps) {
                 >
                   {/* Avatar */}
                   <div
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 flex-shrink-0"
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-700 shrink-0"
                     style={{ backgroundColor: 'rgb(245 166 35 / 0.15)', color: 'var(--color-primary)' }}
                   >
                     {cliente.nome.charAt(0).toUpperCase()}
@@ -396,7 +431,7 @@ export function Carteira({ session }: CarteiraProps) {
 
                   {/* Status badge */}
                   <span
-                    className="text-xs font-600 px-2 py-1 rounded-lg flex-shrink-0"
+                    className="text-xs font-600 px-2 py-1 rounded-lg shrink-0"
                     style={{ backgroundColor: status.bg, color: status.color }}
                   >
                     {status.label}
@@ -406,7 +441,7 @@ export function Carteira({ session }: CarteiraProps) {
                   <svg
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${aberto ? 'rotate-180' : ''}`}
                     style={{ color: 'var(--color-text-muted)' }}
                   >
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />

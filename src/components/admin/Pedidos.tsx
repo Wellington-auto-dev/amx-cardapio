@@ -171,6 +171,41 @@ export function Pedidos({ session }: PedidosProps) {
     filtroCanal === 'todos' || p.canal === filtroCanal,
   );
 
+  if (pedidos.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-700" style={{ color: 'var(--color-text)' }}>Pedidos</h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Nenhum pedido registrado ainda</p>
+          </div>
+          <button
+            onClick={load}
+            className="flex items-center gap-1.5 text-xs font-600 px-3 py-2 rounded-xl transition-opacity hover:opacity-70"
+            style={{ backgroundColor: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            Atualizar
+          </button>
+        </div>
+        <div
+          className="rounded-2xl p-16 flex flex-col items-center gap-4"
+          style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-14 h-14" style={{ color: 'var(--color-text-muted)' }}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <div className="text-center">
+            <p className="text-sm font-600" style={{ color: 'var(--color-text)' }}>Nenhum pedido ainda</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>Os pedidos realizados pelo cardapio aparecerao aqui</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
 
@@ -361,26 +396,30 @@ export function Pedidos({ session }: PedidosProps) {
                     {/* Itens */}
                     <div>
                       <p className="text-[10px] font-600 uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>Itens do Pedido</p>
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr style={{ color: 'var(--color-text-secondary)' }}>
-                            <th className="text-left font-600 pb-1.5" style={{ width: '50%' }}>Item</th>
-                            <th className="text-center font-600 pb-1.5">Qtd</th>
-                            <th className="text-right font-600 pb-1.5">Preco</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pedido.itens.map((item, idx) => (
-                            <tr key={idx} style={{ borderTop: '1px solid var(--color-border)' }}>
-                              <td className="py-1.5 font-500" style={{ color: 'var(--color-text)' }}>{item.nome}</td>
-                              <td className="py-1.5 text-center font-600" style={{ color: 'var(--color-text-secondary)' }}>{item.quantidade}</td>
-                              <td className="py-1.5 text-right font-700" style={{ color: 'var(--color-primary)' }}>
-                                {formatCurrency(item.preco * item.quantidade)}
-                              </td>
+                      {pedido.itens.length === 0 ? (
+                        <p className="text-xs py-2" style={{ color: 'var(--color-text-muted)' }}>Sem itens registrados neste pedido.</p>
+                      ) : (
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr style={{ color: 'var(--color-text-secondary)' }}>
+                              <th className="text-left font-600 pb-1.5" style={{ width: '50%' }}>Item</th>
+                              <th className="text-center font-600 pb-1.5">Qtd</th>
+                              <th className="text-right font-600 pb-1.5">Preco</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {pedido.itens.map((item, idx) => (
+                              <tr key={idx} style={{ borderTop: '1px solid var(--color-border)' }}>
+                                <td className="py-1.5 font-500" style={{ color: 'var(--color-text)' }}>{item.nome}</td>
+                                <td className="py-1.5 text-center font-600" style={{ color: 'var(--color-text-secondary)' }}>{item.quantidade}</td>
+                                <td className="py-1.5 text-right font-700" style={{ color: 'var(--color-primary)' }}>
+                                  {formatCurrency(item.preco * item.quantidade)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
                     </div>
                   </div>
                 )}
