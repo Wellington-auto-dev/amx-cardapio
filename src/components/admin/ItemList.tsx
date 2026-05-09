@@ -507,13 +507,14 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
 
 // ─── Sortable Item Row ─────────────────────────────────────────────────────
 
-function SortableItemRow({ item, categoria, session, onEdit, onDelete, onToast }: {
+function SortableItemRow({ item, categoria, session, onEdit, onDelete, onToast, onToggled }: {
   item: Item;
   categoria: string;
   session: AdminSession;
   onEdit: (item: Item, categoria: string) => void;
   onDelete: (item: Item) => void;
   onToast: ItemListProps['onToast'];
+  onToggled: (itemId: string, catNome: string, value: boolean) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
   const [disponivel, setDisponivel] = useState(item.disponivel);
@@ -523,7 +524,13 @@ function SortableItemRow({ item, categoria, session, onEdit, onDelete, onToast }
     setDisponivel(checked);
     setLoading(true);
     try {
-      await atualizarDisponibilidade(session.merchant_id, session.token, item.id, checked);
+      const res = await atualizarDisponibilidade(session.merchant_id, session.token, item.id, checked);
+      if (res.sucesso) {
+        onToggled(item.id, categoria, checked);
+      } else {
+        setDisponivel(!checked);
+        onToast('error', 'Erro ao atualizar disponibilidade');
+      }
     } catch {
       setDisponivel(!checked);
       onToast('error', 'Erro ao atualizar disponibilidade');
@@ -623,11 +630,30 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
   );
 
   useEffect(() => {
-    setLocalCategorias(categorias);
+    setLocalCategorias(prev => {
+      if (prev.length === 0) return categorias;
+      // A API pública filtra itens com disponivel=false.
+      // Preservamos itens que estavam em prev mas sumiram do retorno
+      // (exceto os deletados, que removemos do estado antes do refetch).
+      const incomingIds = new Set(categorias.flatMap(c => c.itens.map(i => i.id)));
+      return categorias.map(cat => {
+        const prevCat = prev.find(p => p.nome === cat.nome);
+        const addBack = (prevCat?.itens ?? []).filter(i => !incomingIds.has(i.id));
+        return { ...cat, itens: [...cat.itens, ...addBack] };
+      });
+    });
   }, [categorias]);
 
   const totalItens = localCategorias.reduce((s, c) => s + c.itens.length, 0);
   const categoriasExistentes = localCategorias.map((c) => c.nome);
+
+  const handleToggleDisponivel = (itemId: string, catNome: string, value: boolean) => {
+    setLocalCategorias(prev => prev.map(cat =>
+      cat.nome === catNome
+        ? { ...cat, itens: cat.itens.map(i => i.id === itemId ? { ...i, disponivel: value } : i) }
+        : cat
+    ));
+  };
 
   const handleDragEnd = (event: DragEndEvent, catNome: string) => {
     const { active, over } = event;
@@ -659,6 +685,10 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
     try {
       await deletarItem(session.merchant_id, session.token, itemToDelete.id);
       onToast('success', `"${itemToDelete.nome}" excluído.`);
+      // Remove o item do estado local ANTES do refetch para o merge não o ressuscitar
+      setLocalCategorias(prev =>
+        prev.map(cat => ({ ...cat, itens: cat.itens.filter(i => i.id !== itemToDelete.id) }))
+      );
       onRefresh();
     } catch {
       onToast('error', 'Erro ao excluir item');
@@ -757,6 +787,7 @@ export function ItemList({ categorias, session, onRefresh, onAddFirst, onToast }
                       onEdit={(i, c) => setEditTarget({ item: i, categoria: c })}
                       onDelete={setItemToDelete}
                       onToast={onToast}
+                      onToggled={handleToggleDisponivel}
                     />
                   ))}
                 </SortableContext>
