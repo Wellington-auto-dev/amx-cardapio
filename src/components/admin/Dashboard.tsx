@@ -587,7 +587,8 @@ function BarChart({ ifood, direto }: { ifood: number; direto: number }) {
 
 function LinkCard({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false);
-  const url = `https://sequiserpedir.vercel.app/${slug}`;
+  const appUrl = import.meta.env.VITE_APP_URL ?? 'https://sequiserpedir.vercel.app';
+  const url = `${appUrl}/${slug}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(url);
