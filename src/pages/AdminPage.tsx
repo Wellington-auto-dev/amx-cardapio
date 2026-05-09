@@ -281,7 +281,7 @@ export default function AdminPage() {
 
   const toast = (type: 'success' | 'error', title: string, msg?: string) => addToast(type, title, msg);
   const handleRefresh = () => { refetch(); };
-  const logoInitial = nomeLoja.charAt(0).toUpperCase();
+  const logoInitial = (nomeLoja ?? '?').charAt(0).toUpperCase();
 
   const handleTabChange = (i: number) => {
     setActiveTab(i);
