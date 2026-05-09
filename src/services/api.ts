@@ -88,13 +88,10 @@ export async function atualizarDisponibilidade(
   itemId: string,
   disponivel: boolean,
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
-    merchant_id: merchantId,
-    token,
-    acao: 'disponibilidade',
-    item_id: itemId,
-    disponivel,
-  });
+  const payload = { merchant_id: merchantId, token, acao: 'disponibilidade', item_id: itemId, disponivel };
+  console.log('[api] atualizarDisponibilidade payload:', payload);
+  const { data } = await api.post('/amx-cardapio-admin', payload);
+  console.log('[api] atualizarDisponibilidade response:', data);
   return data;
 }
 

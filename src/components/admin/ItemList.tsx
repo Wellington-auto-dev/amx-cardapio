@@ -524,14 +524,17 @@ function SortableItemRow({ item, categoria, session, onEdit, onDelete, onToast, 
     setDisponivel(checked);
     setLoading(true);
     try {
+      console.log('[toggle] enviando:', { merchant_id: session.merchant_id, item_id: item.id, disponivel: checked });
       const res = await atualizarDisponibilidade(session.merchant_id, session.token, item.id, checked);
-      if (res.sucesso) {
+      console.log('[toggle] resposta:', res);
+      if (res.sucesso !== false) {
         onToggled(item.id, categoria, checked);
       } else {
         setDisponivel(!checked);
         onToast('error', 'Erro ao atualizar disponibilidade');
       }
-    } catch {
+    } catch (err) {
+      console.error('[toggle] erro:', err);
       setDisponivel(!checked);
       onToast('error', 'Erro ao atualizar disponibilidade');
     } finally {
