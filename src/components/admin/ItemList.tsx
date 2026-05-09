@@ -15,8 +15,9 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Categoria, Item } from '@/types/catalog';
-import type { AdminSession } from '@/types/admin';
+import type { AdminSession, GrupoEditPayload } from '@/types/admin';
 import { atualizarDisponibilidade, deletarItem, editarItem, reordenarItens } from '@/services/api';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { exportarCardapio } from '@/services/excel';
 import { uploadImagem } from '@/services/cloudinary';
 import { Toggle } from '@/components/ui/Toggle';
@@ -49,6 +50,11 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--color-text-secondary)',
   marginBottom: 6,
 };
+
+const GRUPO_EDIT_VAZIO = (): GrupoEditPayload => ({
+  nome: '', obrigatorio: false, minimo: 1, maximo: 1,
+  opcoes: [{ nome: '', preco_adicional: 0 }],
+});
 
 // ─── Drag Handle Icon ──────────────────────────────────────────────────────
 
@@ -124,12 +130,22 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
 
   const [form, setForm] = useState({
     categoria: categoriaInicial,
-    nome: item.nome,
-    descricao: item.descricao,
+    nome: item.nome ?? '',
+    descricao: item.descricao ?? '',
     preco: String(item.preco).replace('.', ','),
-    foto_url: item.foto_url,
+    foto_url: item.foto_url ?? '',
     disponivel: item.disponivel,
   });
+  const [grupos, setGrupos] = useState<GrupoEditPayload[]>(() =>
+    (item.grupos ?? []).map(g => ({
+      id: g.id,
+      nome: g.nome,
+      obrigatorio: g.obrigatorio,
+      minimo: g.minimo,
+      maximo: g.maximo,
+      opcoes: g.opcoes.map(o => ({ id: o.id, nome: o.nome, preco_adicional: o.preco_adicional })),
+    }))
+  );
   const [loading, setLoading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -155,6 +171,17 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
     }
   };
 
+  const addGrupoEdit = () => setGrupos(p => [...p, GRUPO_EDIT_VAZIO()]);
+  const removeGrupoEdit = (idx: number) => setGrupos(p => p.filter((_, i) => i !== idx));
+  const updateGrupoEdit = (idx: number, patch: Partial<GrupoEditPayload>) =>
+    setGrupos(p => p.map((g, i) => i === idx ? { ...g, ...patch } : g));
+  const addOpcaoEdit = (gi: number) =>
+    setGrupos(p => p.map((g, i) => i === gi ? { ...g, opcoes: [...g.opcoes, { nome: '', preco_adicional: 0 }] } : g));
+  const removeOpcaoEdit = (gi: number, oi: number) =>
+    setGrupos(p => p.map((g, i) => i === gi ? { ...g, opcoes: g.opcoes.filter((_, j) => j !== oi) } : g));
+  const updateOpcaoEdit = (gi: number, oi: number, field: 'nome' | 'preco_adicional', value: string | number) =>
+    setGrupos(p => p.map((g, i) => i === gi ? { ...g, opcoes: g.opcoes.map((o, j) => j === oi ? { ...o, [field]: value } : o) } : g));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nome || !form.categoria || !form.preco) {
@@ -170,6 +197,7 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
         preco: parseFloat(form.preco.replace(',', '.')),
         foto_url: form.foto_url,
         disponivel: form.disponivel,
+        grupos,
       });
       if (res.sucesso) {
         onToast('success', `"${form.nome}" atualizado!`);
@@ -309,6 +337,149 @@ function EditModal({ target, categoriasExistentes, session, onClose, onSaved, on
             ariaLabel="Disponibilidade"
           />
 
+          {/* Grupos de personalização */}
+          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 16 }}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-700" style={{ color: 'var(--color-text)' }}>Personalização</h4>
+              <button
+                type="button"
+                onClick={addGrupoEdit}
+                className="text-xs font-600 px-2.5 py-1 rounded-lg transition-opacity hover:opacity-75"
+                style={{ border: '1px solid var(--color-primary)', color: 'var(--color-primary)', backgroundColor: 'transparent', cursor: 'pointer' }}
+              >
+                + Grupo
+              </button>
+            </div>
+
+            {grupos.length === 0 && (
+              <p className="text-xs text-center py-3" style={{ color: 'var(--color-text-muted)' }}>
+                Nenhum grupo. Adicione variações como tamanho, borda, etc.
+              </p>
+            )}
+
+            <div className="space-y-3">
+              {grupos.map((grupo, gi) => (
+                <div
+                  key={gi}
+                  className="rounded-xl p-3 space-y-3 relative"
+                  style={{ border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface-2)' }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => removeGrupoEdit(gi)}
+                    className="absolute top-3 right-3 opacity-40 hover:opacity-100 transition-opacity"
+                    style={{ color: '#F87171', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+
+                  <div>
+                    <label style={labelStyle}>
+                      Nome do grupo
+                      <Tooltip text="Ex: Tamanho, Borda, Acompanhamento. Agrupa as opções que o cliente pode escolher." />
+                    </label>
+                    <input
+                      type="text"
+                      value={grupo.nome}
+                      onChange={(e) => updateGrupoEdit(gi, { nome: e.target.value })}
+                      placeholder="Ex: Tamanho, Borda"
+                      style={{ ...inputStyle, backgroundColor: 'var(--color-surface-3)' }}
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 items-center">
+                    <div className="flex items-center gap-2">
+                      <Toggle
+                        checked={grupo.obrigatorio}
+                        onChange={(v) => updateGrupoEdit(gi, { obrigatorio: v })}
+                        label="Obrigatório"
+                      />
+                      <Tooltip text="Se ativado o cliente precisa escolher pelo menos uma opção deste grupo para continuar." />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <label style={{ ...labelStyle, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          Mínimo <Tooltip text="Quantidade mínima de opções que o cliente deve selecionar neste grupo." />
+                        </label>
+                        <input
+                          type="number" min={0} value={grupo.minimo}
+                          onChange={(e) => updateGrupoEdit(gi, { minimo: Number(e.target.value) })}
+                          style={{ ...inputStyle, width: 64, textAlign: 'center', padding: '6px 8px', backgroundColor: 'var(--color-surface-3)' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ ...labelStyle, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          Máximo <Tooltip text="Quantidade máxima de opções que o cliente pode selecionar neste grupo." />
+                        </label>
+                        <input
+                          type="number" min={1} value={grupo.maximo}
+                          onChange={(e) => updateGrupoEdit(gi, { maximo: Number(e.target.value) })}
+                          style={{ ...inputStyle, width: 64, textAlign: 'center', padding: '6px 8px', backgroundColor: 'var(--color-surface-3)' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex gap-2 items-center mb-1">
+                      <span style={{ ...labelStyle, flex: 1, marginBottom: 0 }}>
+                        Nome da opção
+                        <Tooltip text="Ex: Broto, Média, Grande. Cada opção pode ter um preço adicional." />
+                      </span>
+                      <span style={{ ...labelStyle, width: 90, marginBottom: 0, textAlign: 'right' }}>
+                        + Preço
+                        <Tooltip text="Valor adicionado ao preço base do item. Use 0 para opções sem custo extra." />
+                      </span>
+                    </div>
+                    {grupo.opcoes.map((opcao, oi) => (
+                      <div key={oi} className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          value={opcao.nome}
+                          onChange={(e) => updateOpcaoEdit(gi, oi, 'nome', e.target.value)}
+                          placeholder="Nome da opção"
+                          style={{ ...inputStyle, flex: 1, fontSize: 13, backgroundColor: 'var(--color-surface-3)' }}
+                        />
+                        <div className="flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
+                          <span className="px-2 text-xs py-2" style={{ backgroundColor: 'var(--color-surface-3)', color: 'var(--color-text-secondary)', borderRight: '1px solid var(--color-border)' }}>R$</span>
+                          <input
+                            type="number" step="0.01" min={0}
+                            value={opcao.preco_adicional}
+                            onChange={(e) => updateOpcaoEdit(gi, oi, 'preco_adicional', parseFloat(e.target.value) || 0)}
+                            style={{ ...inputStyle, width: 64, borderRadius: 0, border: 'none', padding: '8px 6px', fontSize: 13, backgroundColor: 'var(--color-surface-3)' }}
+                            placeholder="0,00"
+                          />
+                        </div>
+                        {grupo.opcoes.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeOpcaoEdit(gi, oi)}
+                            className="opacity-40 hover:opacity-100 transition-opacity"
+                            style={{ color: '#F87171', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                          >
+                            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => addOpcaoEdit(gi)}
+                      className="text-xs mt-1 hover:underline"
+                      style={{ color: 'var(--color-primary)', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}
+                    >
+                      + Adicionar opção
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button
               type="button"
@@ -369,7 +540,7 @@ function SortableItemRow({ item, categoria, session, onEdit, onDelete, onToast }
         borderBottom: '1px solid var(--color-border-subtle)',
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.4 : 1,
+        opacity: isDragging ? 0.4 : disponivel ? 1 : 0.5,
         position: 'relative',
         zIndex: isDragging ? 1 : undefined,
         backgroundColor: isDragging ? 'var(--color-surface-2)' : undefined,

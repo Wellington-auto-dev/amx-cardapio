@@ -12,11 +12,13 @@ export function ItemCard({ item, onAdd }: ItemCardProps) {
 
   return (
     <div
-      className="flex gap-3 p-4 rounded-2xl transition-all duration-200 hover:translate-y-[-1px] group"
+      onClick={item.disponivel ? () => onAdd(item) : undefined}
+      className={`flex gap-3 p-4 rounded-2xl transition-all duration-200 group ${item.disponivel ? 'hover:-translate-y-px cursor-pointer' : ''}`}
       style={{
         backgroundColor: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         boxShadow: 'var(--shadow-sm)',
+        opacity: item.disponivel ? 1 : 0.55,
       }}
     >
       {/* Informações */}
@@ -38,7 +40,7 @@ export function ItemCard({ item, onAdd }: ItemCardProps) {
       </div>
 
       {/* Foto + botão */}
-      <div className="relative flex-shrink-0 w-24 h-24">
+      <div className="relative shrink-0 w-24 h-24">
         {item.foto_url && !imgError ? (
           <img
             src={item.foto_url}
@@ -71,7 +73,7 @@ export function ItemCard({ item, onAdd }: ItemCardProps) {
         {/* Botão + */}
         {item.disponivel && (
           <button
-            onClick={() => onAdd(item)}
+            onClick={(e) => { e.stopPropagation(); onAdd(item); }}
             aria-label={`Adicionar ${item.nome} ao carrinho`}
             className="absolute -bottom-2.5 -right-2.5 w-8 h-8 rounded-full text-white flex items-center justify-center shadow-md text-lg font-700 leading-none transition-all hover:scale-110 active:scale-95 focus:outline-none"
             style={{

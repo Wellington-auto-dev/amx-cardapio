@@ -20,6 +20,21 @@ export interface GrupoManualPayload {
   opcoes: OpcaoManualPayload[];
 }
 
+export interface OpcaoEditPayload {
+  id?: string;
+  nome: string;
+  preco_adicional: number;
+}
+
+export interface GrupoEditPayload {
+  id?: string;
+  nome: string;
+  obrigatorio: boolean;
+  minimo: number;
+  maximo: number;
+  opcoes: OpcaoEditPayload[];
+}
+
 export interface ItemManualPayload {
   merchant_id: string;
   token: string;

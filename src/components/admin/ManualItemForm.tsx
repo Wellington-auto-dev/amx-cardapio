@@ -2,6 +2,7 @@ import { useState, useId, useRef } from 'react';
 import type { AdminSession, GrupoManualPayload } from '@/types/admin';
 import { inserirItemManual } from '@/services/api';
 import { Toggle } from '@/components/ui/Toggle';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { uploadImagem } from '@/services/cloudinary';
 
 interface ManualItemFormProps {
@@ -171,7 +172,10 @@ export function ManualItemForm({ session, categoriasExistentes, onSuccess, onToa
 
           <div className="sm:col-span-2">
             <label htmlFor={`${uid}-descricao`} style={labelStyle}>
-              Descrição <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}>({form.descricao.length}/200)</span>
+              Descrição
+              <Tooltip text="Descreva os ingredientes e características do item. Máximo 200 caracteres." />
+              {' '}
+              <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}>({form.descricao.length}/200)</span>
             </label>
             <textarea
               id={`${uid}-descricao`}
@@ -198,7 +202,7 @@ export function ManualItemForm({ session, categoriasExistentes, onSuccess, onToa
                 type="button"
                 onClick={() => fotoInputRef.current?.click()}
                 disabled={uploadingFoto}
-                className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-600 transition-opacity hover:opacity-85 disabled:opacity-50 flex items-center gap-1.5"
+                className="shrink-0 px-3 py-2 rounded-xl text-xs font-600 transition-opacity hover:opacity-85 disabled:opacity-50 flex items-center gap-1.5"
                 style={{ backgroundColor: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
               >
                 {uploadingFoto ? (
@@ -221,7 +225,7 @@ export function ManualItemForm({ session, categoriasExistentes, onSuccess, onToa
                 <img
                   src={form.foto_url}
                   alt="Preview"
-                  className="w-14 h-14 rounded-xl object-cover flex-shrink-0"
+                  className="w-14 h-14 rounded-xl object-cover shrink-0"
                   style={{ border: '1px solid var(--color-border)' }}
                   onError={() => setPreviewError(true)}
                 />
@@ -282,7 +286,10 @@ export function ManualItemForm({ session, categoriasExistentes, onSuccess, onToa
             </button>
 
             <div>
-              <label style={labelStyle}>Nome do grupo</label>
+              <label style={labelStyle}>
+                Nome do grupo
+                <Tooltip text="Ex: Tamanho, Borda, Acompanhamento. Agrupa as opções que o cliente pode escolher." />
+              </label>
               <input
                 type="text"
                 value={grupo.nome}
@@ -293,14 +300,19 @@ export function ManualItemForm({ session, categoriasExistentes, onSuccess, onToa
             </div>
 
             <div className="flex flex-wrap gap-4 items-center">
-              <Toggle
-                checked={grupo.obrigatorio}
-                onChange={(v) => updateGrupo(gi, { obrigatorio: v })}
-                label="Obrigatório"
-              />
+              <div className="flex items-center gap-2">
+                <Toggle
+                  checked={grupo.obrigatorio}
+                  onChange={(v) => updateGrupo(gi, { obrigatorio: v })}
+                  label="Obrigatório"
+                />
+                <Tooltip text="Se ativado o cliente precisa escolher pelo menos uma opção deste grupo para continuar." />
+              </div>
               <div className="flex items-center gap-3">
                 <div>
-                  <label style={{ ...labelStyle, marginBottom: 4 }}>Mínimo</label>
+                  <label style={{ ...labelStyle, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    Mínimo <Tooltip text="Quantidade mínima de opções que o cliente deve selecionar neste grupo." />
+                  </label>
                   <input
                     type="number" min={0} value={grupo.minimo}
                     onChange={(e) => updateGrupo(gi, { minimo: Number(e.target.value) })}
@@ -308,7 +320,9 @@ export function ManualItemForm({ session, categoriasExistentes, onSuccess, onToa
                   />
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, marginBottom: 4 }}>Máximo</label>
+                  <label style={{ ...labelStyle, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    Máximo <Tooltip text="Quantidade máxima de opções que o cliente pode selecionar neste grupo." />
+                  </label>
                   <input
                     type="number" min={1} value={grupo.maximo}
                     onChange={(e) => updateGrupo(gi, { maximo: Number(e.target.value) })}
@@ -319,7 +333,16 @@ export function ManualItemForm({ session, categoriasExistentes, onSuccess, onToa
             </div>
 
             <div className="space-y-2">
-              <label style={labelStyle}>Opções</label>
+              <div className="flex gap-2 items-center mb-1">
+                <span style={{ ...labelStyle, flex: 1, marginBottom: 0 }}>
+                  Nome da opção
+                  <Tooltip text="Ex: Broto, Média, Grande. Cada opção pode ter um preço adicional." />
+                </span>
+                <span style={{ ...labelStyle, width: 90, marginBottom: 0, textAlign: 'right' }}>
+                  + Preço
+                  <Tooltip text="Valor adicionado ao preço base do item. Use 0 para opções sem custo extra." />
+                </span>
+              </div>
               {grupo.opcoes.map((opcao, oi) => (
                 <div key={oi} className="flex gap-2 items-center">
                   <input

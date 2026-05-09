@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { Merchant } from '@/types/catalog';
-import type { ItemManualPayload, ClubVipConfig, ClubVipNivel, ClubVipSaldo, ClubVipResgate, CategoriaOrdem } from '@/types/admin';
+import type { ItemManualPayload, ClubVipConfig, ClubVipNivel, ClubVipSaldo, ClubVipResgate, CategoriaOrdem, GrupoEditPayload } from '@/types/admin';
 import type { ParsedPlanilha } from '@/services/excel';
 import { montarPayloadPlanilha } from '@/services/excel';
 
@@ -127,6 +127,7 @@ export async function editarItem(
     preco?: number;
     foto_url?: string;
     disponivel?: boolean;
+    grupos?: GrupoEditPayload[];
   },
 ): Promise<{ sucesso: boolean; mensagem: string }> {
   const { data } = await api.post('/amx-cardapio-admin', {
