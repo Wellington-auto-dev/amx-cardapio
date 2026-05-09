@@ -29,7 +29,6 @@ export function useOperador() {
 
     if (!user) {
       navigate('/operador/login');
-      setIsLoading(false);
       return;
     }
 
