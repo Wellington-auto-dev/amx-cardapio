@@ -11,7 +11,7 @@ function CardSkeleton() {
     >
       <div className="flex items-center gap-3">
         <div
-          className="w-12 h-12 rounded-xl flex-shrink-0"
+          className="w-12 h-12 rounded-xl shrink-0"
           style={{ backgroundColor: 'var(--color-surface-2)' }}
         />
         <div className="flex-1 space-y-2">
@@ -83,12 +83,12 @@ function LojaCard({ loja }: { loja: Loja }) {
           <img
             src={loja.logo_url}
             alt={loja.nome}
-            className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+            className="w-12 h-12 rounded-xl object-cover shrink-0"
             style={{ border: '1px solid var(--color-border)' }}
           />
         ) : (
           <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-700 flex-shrink-0"
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-700 shrink-0"
             style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
           >
             {initial}
