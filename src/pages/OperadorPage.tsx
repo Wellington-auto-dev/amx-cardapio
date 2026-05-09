@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useClerk } from '@clerk/clerk-react';
 import { useOperador } from '@/hooks/useOperador';
 
 // ─── Skeleton ──────────────────────────────────────────────────────────────
@@ -31,6 +32,8 @@ function CardSkeleton() {
 // ─── Unauthorized ─────────────────────────────────────────────────────────
 
 function NaoAutorizado() {
+  const { signOut } = useClerk();
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: 'var(--color-background)' }}>
       <div
@@ -48,9 +51,19 @@ function NaoAutorizado() {
         <h1 className="text-lg font-700 mb-2" style={{ color: 'var(--color-text)' }}>
           Acesso nao autorizado
         </h1>
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-          O token de operador e invalido ou expirou. Entre em contato com o suporte para obter um novo link de acesso.
+        <p className="text-sm leading-relaxed mb-1" style={{ color: 'var(--color-text-muted)' }}>
+          Seu email nao esta autorizado a acessar este painel.
         </p>
+        <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--color-text-muted)' }}>
+          Entre em contato com o administrador para solicitar acesso.
+        </p>
+        <button
+          onClick={() => signOut({ redirectUrl: '/operador/login' })}
+          className="w-full rounded-xl py-2.5 text-sm font-700 transition-opacity hover:opacity-80"
+          style={{ backgroundColor: 'rgb(239 68 68 / 0.12)', color: '#ef4444', border: '1px solid rgb(239 68 68 / 0.2)', cursor: 'pointer' }}
+        >
+          Sair
+        </button>
       </div>
     </div>
   );
