@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useToast } from '@/hooks/useToast';
 import { useCatalog } from '@/hooks/useCatalog';
@@ -105,6 +105,7 @@ function SidebarNav({
   logoUrl,
   logoInitial,
   collapsed = false,
+  onVoltar,
 }: {
   activeTab: number;
   onChange: (i: number) => void;
@@ -112,6 +113,7 @@ function SidebarNav({
   logoUrl: string;
   logoInitial: string;
   collapsed?: boolean;
+  onVoltar?: () => void;
 }) {
   const [hovered, setHovered] = useState<number | null>(null);
 
@@ -166,6 +168,33 @@ function SidebarNav({
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
+        {onVoltar && (
+          <>
+            <button
+              onClick={onVoltar}
+              className="w-full flex items-center rounded-xl text-sm transition-all"
+              style={{
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                padding: collapsed ? '10px 0' : '10px 12px',
+                gap: collapsed ? 0 : 12,
+                backgroundColor: 'transparent',
+                color: 'var(--color-text-secondary)',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{ color: 'var(--color-text-muted)', flexShrink: 0 }}>
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                </svg>
+              </span>
+              {!collapsed && 'Voltar ao Painel'}
+            </button>
+            <div style={{ height: '1px', margin: '2px 0 6px', backgroundColor: 'var(--color-border)' }} />
+          </>
+        )}
         {NAV_ITEMS.map((item, i) => (
           <div
             key={item.label}
@@ -227,6 +256,7 @@ function SidebarNav({
 
 export default function AdminPage() {
   const { slug = '' } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const { authState, session } = useAdmin(slug);
   const { data: merchant, refetch } = useCatalog(slug);
   const { toasts, addToast, removeToast } = useToast();
@@ -279,6 +309,7 @@ export default function AdminPage() {
                 nomeLoja={nomeLoja}
                 logoUrl={currentLogo}
                 logoInitial={logoInitial}
+                onVoltar={() => navigate('/operador')}
               />
             </aside>
           </div>
@@ -328,6 +359,7 @@ export default function AdminPage() {
             logoUrl={currentLogo}
             logoInitial={logoInitial}
             collapsed={sidebarCollapsed}
+            onVoltar={() => navigate('/operador')}
           />
 
           {/* Theme toggle footer */}
