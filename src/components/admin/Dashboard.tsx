@@ -527,7 +527,7 @@ function LineChart({ evolucao }: { evolucao: EvolucaoPoint[] }) {
 
 // ─── Bar chart ─────────────────────────────────────────────────────────────
 
-function BarChart({ ifood, direto }: { ifood: number; direto: number }) {
+function BarChart({ ifood, direto, pctMkt }: { ifood: number; direto: number; pctMkt: number }) {
   const total = ifood + direto;
   const maxV  = Math.max(ifood, direto, 1);
   const H = 100; const W = 80;
@@ -569,7 +569,7 @@ function BarChart({ ifood, direto }: { ifood: number; direto: number }) {
 
       <div className="space-y-1.5">
         <div className="flex justify-between text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          <span>Marketplace</span>
+          <span>{pctMkt}% Marketplace</span>
           <span>Direto</span>
         </div>
         <div className="w-full rounded-full h-2" style={{ backgroundColor: 'var(--color-border)' }}>
@@ -695,9 +695,10 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
 
   const taxaCaptura = dash.total_clientes > 0
     ? Math.round((dash.clientes_capturados / dash.total_clientes) * 100) : 0;
-  const taxaDireta = dash.total_pedidos > 0
-    ? Math.round((dash.pedidos_diretos / dash.total_pedidos) * 100) : 0;
-  const pedidosIfood = dash.total_pedidos - dash.pedidos_diretos;
+  const pedidosMarketplace = dash.total_pedidos;
+  const totalGeral = pedidosMarketplace + dash.pedidos_diretos;
+  const pctDireto = totalGeral > 0 ? Math.round(dash.pedidos_diretos / totalGeral * 100) : 0;
+  const pctMarketplace = totalGeral > 0 ? Math.round(pedidosMarketplace / totalGeral * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -747,7 +748,7 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
         <MetricCard
           label="Pedidos Diretos"
           value={dash.pedidos_diretos}
-          sub={`${taxaDireta}% do total`}
+          sub={`${pctDireto}% do total`}
           accent="#10B981"
           icon={
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -802,7 +803,7 @@ export function Dashboard({ session, nomeLoja, slug }: DashboardProps) {
       <LineChart evolucao={evolucao} />
 
       {/* Linha 4 — Bar chart */}
-      <BarChart ifood={pedidosIfood} direto={dash.pedidos_diretos} />
+      <BarChart ifood={pedidosMarketplace} direto={dash.pedidos_diretos} pctMkt={pctMarketplace} />
 
       {/* Linha 5 — Link */}
       <LinkCard slug={slug} />
