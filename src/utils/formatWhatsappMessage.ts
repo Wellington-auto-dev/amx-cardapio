@@ -5,6 +5,8 @@ interface DeliveryInfo {
   endereco: EnderecoCliente | null;
   taxaEntregaTipo: string;
   taxaEntregaValor: number;
+  taxaKmCalculada?: number | null;
+  distanciaKm?: number | null;
 }
 
 export function formatWhatsappMessage(
@@ -12,8 +14,14 @@ export function formatWhatsappMessage(
   subtotal: number,
   delivery?: DeliveryInfo,
 ): string {
-  const taxaAtiva = delivery?.taxaEntregaTipo === 'fixa' && toMoney(delivery?.taxaEntregaValor ?? 0) > 0;
-  const taxaValor = taxaAtiva ? toMoney(delivery?.taxaEntregaValor ?? 0) : 0;
+  const isFixa = delivery?.taxaEntregaTipo === 'fixa' && toMoney(delivery?.taxaEntregaValor ?? 0) > 0;
+  const isKm = delivery?.taxaEntregaTipo === 'km' && (delivery?.taxaKmCalculada ?? 0) > 0;
+  const taxaValor = isFixa
+    ? toMoney(delivery?.taxaEntregaValor ?? 0)
+    : isKm
+      ? toMoney(delivery?.taxaKmCalculada ?? 0)
+      : 0;
+  const taxaAtiva = isFixa || isKm;
   const total = toMoney(subtotal) + taxaValor;
 
   const partes: string[] = [
@@ -25,7 +33,10 @@ export function formatWhatsappMessage(
 
   if (taxaAtiva) {
     partes.push(`Subtotal: ${formatCurrency(subtotal)}`);
-    partes.push(`Taxa de entrega: ${formatCurrency(taxaValor)}`);
+    const distStr = isKm && delivery?.distanciaKm != null
+      ? ` (${delivery.distanciaKm.toFixed(1)} km)`
+      : '';
+    partes.push(`Taxa de entrega: ${formatCurrency(taxaValor)}${distStr}`);
   }
   partes.push(`Total: ${formatCurrency(total)}`);
 

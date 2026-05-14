@@ -9,6 +9,8 @@ interface DeliveryInfo {
   endereco: EnderecoCliente | null;
   taxaEntregaTipo: string;
   taxaEntregaValor: number;
+  taxaKmCalculada?: number | null;
+  distanciaKm?: number | null;
 }
 
 export function abrirWhatsApp(

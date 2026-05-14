@@ -578,6 +578,8 @@ export default function AdminPage() {
                       taxaEntregaTipo={merchant?.taxa_entrega_tipo}
                       taxaEntregaValor={merchant?.taxa_entrega_valor}
                       pedidoMinimo={merchant?.pedido_minimo}
+                      lat={merchant?.lat}
+                      lng={merchant?.lng}
                     />
                   </div>
                 )}

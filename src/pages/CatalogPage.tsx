@@ -4,6 +4,7 @@ import { useCatalog } from '@/hooks/useCatalog';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/useToast';
 import { useClubVip } from '@/hooks/useClubVip';
+import { useTaxaKm } from '@/hooks/useTaxaKm';
 import { ClubVipBanner } from '@/components/catalog/ClubVipBanner';
 import { CategoryTabs } from '@/components/catalog/CategoryTabs';
 import { ItemCard } from '@/components/catalog/ItemCard';
@@ -96,6 +97,7 @@ export default function CatalogPage() {
   }, [phoneKey]);
 
   const clubVip = useClubVip(merchant?.merchant_id ?? '', phone);
+  const taxaKm = useTaxaKm(merchant, clubVip.endereco);
 
   useLayoutEffect(() => {
     if (!document.documentElement.hasAttribute('data-theme')) {
@@ -219,6 +221,8 @@ export default function CatalogPage() {
       endereco: clubVip.endereco ?? null,
       taxaEntregaTipo: merchant.taxa_entrega_tipo ?? 'nenhuma',
       taxaEntregaValor: merchant.taxa_entrega_valor ?? 0,
+      taxaKmCalculada: taxaKm.taxaCalculada,
+      distanciaKm: taxaKm.distanciaKm,
     });
     cart.clearCart();
   };
@@ -440,6 +444,9 @@ export default function CatalogPage() {
           lojaFechada={merchant?.loja_aberta === false}
           taxaEntregaTipo={merchant?.taxa_entrega_tipo}
           taxaEntregaValor={merchant?.taxa_entrega_valor}
+          taxaKmCalculada={taxaKm.taxaCalculada}
+          distanciaKm={taxaKm.distanciaKm}
+          taxaKmCalculando={taxaKm.calculando}
           pedidoMinimo={merchant?.pedido_minimo}
           endereco={clubVip.endereco}
         />
@@ -465,6 +472,9 @@ export default function CatalogPage() {
         lojaFechada={merchant?.loja_aberta === false}
         taxaEntregaTipo={merchant?.taxa_entrega_tipo}
         taxaEntregaValor={merchant?.taxa_entrega_valor}
+        taxaKmCalculada={taxaKm.taxaCalculada}
+        distanciaKm={taxaKm.distanciaKm}
+        taxaKmCalculando={taxaKm.calculando}
         pedidoMinimo={merchant?.pedido_minimo}
         endereco={clubVip.endereco}
       />

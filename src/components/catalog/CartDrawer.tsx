@@ -15,6 +15,9 @@ interface CartDrawerProps {
   lojaFechada?: boolean;
   taxaEntregaTipo?: string;
   taxaEntregaValor?: number;
+  taxaKmCalculada?: number | null;
+  distanciaKm?: number | null;
+  taxaKmCalculando?: boolean;
   pedidoMinimo?: number;
   endereco?: EnderecoCliente | null;
 }
@@ -121,6 +124,9 @@ function CartFooter({
   lojaFechada,
   taxaEntregaTipo,
   taxaEntregaValor,
+  taxaKmCalculada,
+  distanciaKm,
+  taxaKmCalculando,
   pedidoMinimo,
   endereco,
 }: {
@@ -129,11 +135,20 @@ function CartFooter({
   lojaFechada?: boolean;
   taxaEntregaTipo?: string;
   taxaEntregaValor?: number;
+  taxaKmCalculada?: number | null;
+  distanciaKm?: number | null;
+  taxaKmCalculando?: boolean;
   pedidoMinimo?: number;
   endereco?: EnderecoCliente | null;
 }) {
-  const taxaAtiva = taxaEntregaTipo === 'fixa' && toMoney(taxaEntregaValor ?? 0) > 0;
-  const taxa = taxaAtiva ? toMoney(taxaEntregaValor ?? 0) : 0;
+  const isFixa = taxaEntregaTipo === 'fixa' && toMoney(taxaEntregaValor ?? 0) > 0;
+  const isKm = taxaEntregaTipo === 'km';
+  const taxaAtiva = isFixa || isKm;
+  const taxa = isFixa
+    ? toMoney(taxaEntregaValor ?? 0)
+    : isKm && taxaKmCalculada != null
+      ? taxaKmCalculada
+      : 0;
   const totalFinal = toMoney(total) + taxa;
   const minimo = toMoney(pedidoMinimo ?? 0);
   const abaixoMinimo = minimo > 0 && toMoney(total) < minimo;
@@ -164,7 +179,15 @@ function CartFooter({
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Taxa de entrega</span>
-            <span className="text-sm font-600" style={{ color: 'var(--color-text)' }}>{formatCurrency(taxa)}</span>
+            <span className="text-sm font-600" style={{ color: 'var(--color-text)' }}>
+              {isKm && taxaKmCalculando
+                ? 'Calculando...'
+                : isKm && taxaKmCalculada == null
+                  ? 'Na entrega'
+                  : isKm && distanciaKm != null
+                    ? `${formatCurrency(taxa)} (${distanciaKm.toFixed(1)} km)`
+                    : formatCurrency(taxa)}
+            </span>
           </div>
         </div>
       )}
@@ -212,7 +235,8 @@ function CartFooter({
 /** Sidebar — desktop */
 export function CartSidebar({
   items, total, onUpdateQuantity, onRemove, onEdit, onFinalize, lojaFechada,
-  taxaEntregaTipo, taxaEntregaValor, pedidoMinimo, endereco,
+  taxaEntregaTipo, taxaEntregaValor, taxaKmCalculada, distanciaKm, taxaKmCalculando,
+  pedidoMinimo, endereco,
 }: Omit<CartDrawerProps, 'open' | 'onClose'>) {
   return (
     <aside
@@ -242,6 +266,9 @@ export function CartSidebar({
             lojaFechada={lojaFechada}
             taxaEntregaTipo={taxaEntregaTipo}
             taxaEntregaValor={taxaEntregaValor}
+            taxaKmCalculada={taxaKmCalculada}
+            distanciaKm={distanciaKm}
+            taxaKmCalculando={taxaKmCalculando}
             pedidoMinimo={pedidoMinimo}
             endereco={endereco}
           />
@@ -254,7 +281,8 @@ export function CartSidebar({
 /** Bottom sheet — mobile */
 export function CartDrawer({
   items, total, open, onClose, onUpdateQuantity, onRemove, onEdit, onFinalize, lojaFechada,
-  taxaEntregaTipo, taxaEntregaValor, pedidoMinimo, endereco,
+  taxaEntregaTipo, taxaEntregaValor, taxaKmCalculada, distanciaKm, taxaKmCalculando,
+  pedidoMinimo, endereco,
 }: CartDrawerProps) {
   const handleFinalize = () => { onFinalize(); if (!lojaFechada) onClose(); };
 
@@ -276,6 +304,9 @@ export function CartDrawer({
           lojaFechada={lojaFechada}
           taxaEntregaTipo={taxaEntregaTipo}
           taxaEntregaValor={taxaEntregaValor}
+          taxaKmCalculada={taxaKmCalculada}
+          distanciaKm={distanciaKm}
+          taxaKmCalculando={taxaKmCalculando}
           pedidoMinimo={pedidoMinimo}
           endereco={endereco}
         />

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AdminSession } from '@/types/admin';
 import { toggleLojaAberta, atualizarMensagemFechado, atualizarHorarios, salvarTaxaEntrega } from '@/services/api';
+import { geocodeEndereco } from '@/services/googleMaps';
 import { Toggle } from '@/components/ui/Toggle';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -20,6 +21,8 @@ interface ConfiguracoesProps {
   taxaEntregaTipo?: string;
   taxaEntregaValor?: number;
   pedidoMinimo?: number;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -76,7 +79,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 // ─── Main component ────────────────────────────────────────────────────────
 
-export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, horarios, taxaEntregaTipo = 'nenhuma', taxaEntregaValor = 0, pedidoMinimo = 0 }: ConfiguracoesProps) {
+export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, horarios, taxaEntregaTipo = 'nenhuma', taxaEntregaValor = 0, pedidoMinimo = 0, lat = null, lng = null }: ConfiguracoesProps) {
   // ── Status ──────────────────────────────────────────────────────────────
   const [lojaAbertaState, setLojaAbertaState] = useState(lojaAberta);
   const [togglingLoja, setTogglingLoja] = useState(false);
@@ -89,8 +92,15 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
 
   // ── Taxa de entrega ──────────────────────────────────────────────────────
   const [taxaAtiva, setTaxaAtiva] = useState(taxaEntregaTipo !== 'nenhuma');
+  const [taxaTipo, setTaxaTipo] = useState<'fixa' | 'km'>(taxaEntregaTipo === 'km' ? 'km' : 'fixa');
   const [taxaValor, setTaxaValor] = useState(taxaEntregaValor);
   const [pedidoMinimoState, setPedidoMinimoState] = useState(pedidoMinimo);
+  const [enderecoLoja, setEnderecoLoja] = useState('');
+  const [latState, setLatState] = useState<number | null>(lat ?? null);
+  const [lngState, setLngState] = useState<number | null>(lng ?? null);
+  const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
+    (lat && lng) ? 'success' : 'idle',
+  );
   const [savingTaxa, setSavingTaxa] = useState(false);
 
   // ── Helpers ─────────────────────────────────────────────────────────────
@@ -139,15 +149,29 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
     }
   };
 
+  const handleGeocodificar = async () => {
+    if (!enderecoLoja.trim()) return;
+    setGeocodingStatus('loading');
+    const result = await geocodeEndereco(enderecoLoja.trim());
+    if (result) {
+      setLatState(result.lat);
+      setLngState(result.lng);
+      setGeocodingStatus('success');
+    } else {
+      setGeocodingStatus('error');
+    }
+  };
+
   const handleSaveTaxa = async () => {
     setSavingTaxa(true);
     try {
+      const tipoFinal = taxaAtiva ? taxaTipo : 'nenhuma';
       await salvarTaxaEntrega(session.merchant_id, session.token, {
-        taxa_entrega_tipo: taxaAtiva ? 'fixa' : 'nenhuma',
+        taxa_entrega_tipo: tipoFinal,
         taxa_entrega_valor: taxaValor,
         pedido_minimo: pedidoMinimoState,
-        lat: null,
-        lng: null,
+        lat: tipoFinal === 'km' ? latState : null,
+        lng: tipoFinal === 'km' ? lngState : null,
       });
     } catch {
       // silent
@@ -305,21 +329,29 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
                 <p className="text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
                   Tipo de taxa
                 </p>
-                <div
-                  className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-700"
-                  style={{
-                    backgroundColor: 'rgb(245 166 35 / 0.12)',
-                    color: 'var(--color-primary)',
-                    border: '1px solid rgb(245 166 35 / 0.3)',
-                  }}
-                >
-                  Fixa
+                <div className="flex gap-2">
+                  {(['fixa', 'km'] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTaxaTipo(t)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-700 transition-all"
+                      style={{
+                        backgroundColor: taxaTipo === t ? 'rgb(245 166 35 / 0.15)' : 'var(--color-surface-2)',
+                        color: taxaTipo === t ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                        border: `1px solid ${taxaTipo === t ? 'rgb(245 166 35 / 0.4)' : 'var(--color-border)'}`,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {t === 'fixa' ? 'Fixa' : 'Por KM'}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div>
                 <label htmlFor="cfg-taxa-valor" className="block text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
-                  Valor da taxa (R$)
+                  {taxaTipo === 'km' ? 'Valor por KM (R$/km)' : 'Valor da taxa (R$)'}
                 </label>
                 <input
                   id="cfg-taxa-valor"
@@ -331,7 +363,53 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
                   placeholder="0,00"
                   style={inputStyle}
                 />
+                {taxaTipo === 'km' && (
+                  <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                    Ex: R$ 2,00/km — distância arredondada para cima
+                  </p>
+                )}
               </div>
+
+              {taxaTipo === 'km' && (
+                <div>
+                  <p className="text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+                    Endereço do estabelecimento
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={enderecoLoja}
+                      onChange={(e) => { setEnderecoLoja(e.target.value); setGeocodingStatus('idle'); }}
+                      placeholder="Rua, número, cidade..."
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGeocodificar}
+                      disabled={!enderecoLoja.trim() || geocodingStatus === 'loading'}
+                      className="px-3 py-2 rounded-xl text-xs font-600 shrink-0 transition-opacity disabled:opacity-40 hover:opacity-85"
+                      style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D', cursor: 'pointer', border: 'none' }}
+                    >
+                      {geocodingStatus === 'loading' ? '...' : 'Localizar'}
+                    </button>
+                  </div>
+                  {geocodingStatus === 'success' && (
+                    <p className="text-xs mt-1.5 font-600" style={{ color: '#10B981' }}>
+                      Localização encontrada ({latState?.toFixed(4)}, {lngState?.toFixed(4)})
+                    </p>
+                  )}
+                  {geocodingStatus === 'error' && (
+                    <p className="text-xs mt-1.5" style={{ color: '#F87171' }}>
+                      Endereço não encontrado. Tente ser mais específico.
+                    </p>
+                  )}
+                  {geocodingStatus === 'idle' && latState && lngState && (
+                    <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                      Localização atual: ({latState.toFixed(4)}, {lngState.toFixed(4)})
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label htmlFor="cfg-pedido-minimo" className="block text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
