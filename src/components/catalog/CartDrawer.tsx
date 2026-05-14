@@ -1,7 +1,7 @@
 import type { CartItem } from '@/types/cart';
 import type { EnderecoCliente } from '@/types/catalog';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { formatCurrency } from '@/utils/formatCurrency';
+import { formatCurrency, toMoney } from '@/utils/formatCurrency';
 
 interface CartDrawerProps {
   items: CartItem[];
@@ -48,7 +48,7 @@ function CartItemRow({
           <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--color-text-secondary)' }}>{opcoesStr}</p>
         )}
         <p className="text-sm font-700 mt-1" style={{ color: 'var(--color-primary)' }}>
-          {formatCurrency(item.preco_unitario * item.quantidade)}
+          {formatCurrency(toMoney(item.preco_unitario) * toMoney(item.quantidade))}
         </p>
       </div>
 
@@ -132,11 +132,11 @@ function CartFooter({
   pedidoMinimo?: number;
   endereco?: EnderecoCliente | null;
 }) {
-  const taxaAtiva = taxaEntregaTipo === 'fixa' && Number(taxaEntregaValor ?? 0) > 0;
-  const taxa = taxaAtiva ? Number(taxaEntregaValor ?? 0) : 0;
-  const totalFinal = Number(total) + taxa;
-  const minimo = Number(pedidoMinimo ?? 0);
-  const abaixoMinimo = minimo > 0 && Number(total) < minimo;
+  const taxaAtiva = taxaEntregaTipo === 'fixa' && toMoney(taxaEntregaValor ?? 0) > 0;
+  const taxa = taxaAtiva ? toMoney(taxaEntregaValor ?? 0) : 0;
+  const totalFinal = toMoney(total) + taxa;
+  const minimo = toMoney(pedidoMinimo ?? 0);
+  const abaixoMinimo = minimo > 0 && toMoney(total) < minimo;
   const disabled = lojaFechada || abaixoMinimo;
 
   const enderecoStr = endereco

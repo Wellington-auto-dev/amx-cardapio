@@ -4,6 +4,20 @@ const formatter = new Intl.NumberFormat('pt-BR', {
   minimumFractionDigits: 2,
 });
 
+/**
+ * Converte qualquer valor monetário para número seguro antes de operar.
+ * Obrigatório em toda soma, subtração ou comparação de valores monetários,
+ * pois a API pode retornar strings com R$, espaços ou vírgula decimal.
+ */
+export function toMoney(value: unknown): number {
+  if (typeof value === 'number') return parseFloat(value.toFixed(10)) || 0;
+  const str = String(value ?? 0)
+    .replace(/R\$\s?/g, '')
+    .replace(/\s/g, '')
+    .replace(',', '.');
+  return parseFloat(str) || 0;
+}
+
 export function formatCurrency(value: number): string {
   return formatter.format(value);
 }

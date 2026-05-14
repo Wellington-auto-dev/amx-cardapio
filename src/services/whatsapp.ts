@@ -1,6 +1,6 @@
 import type { CartItem } from '@/types/cart';
 import type { EnderecoCliente } from '@/types/catalog';
-import { formatCurrency } from '@/utils/formatCurrency';
+import { formatCurrency, toMoney } from '@/utils/formatCurrency';
 import { formatWhatsappMessage } from '@/utils/formatWhatsappMessage';
 
 const WA_BASE = import.meta.env.VITE_WHATSAPP_BASE_URL as string;
@@ -22,7 +22,7 @@ export function abrirWhatsApp(
       .map((o) => o.opcao_nome)
       .join(', ');
     const descricao = opcoesStr ? ` (${opcoesStr})` : '';
-    return `- ${item.nome}${descricao} x${item.quantidade} -- ${formatCurrency(item.preco_unitario * item.quantidade)}`;
+    return `- ${item.nome}${descricao} x${item.quantidade} -- ${formatCurrency(toMoney(item.preco_unitario) * toMoney(item.quantidade))}`;
   });
 
   const mensagem = formatWhatsappMessage(linhas, subtotal, delivery);

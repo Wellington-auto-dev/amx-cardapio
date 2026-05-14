@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { CartItem, OpcaoSelecionada } from '@/types/cart';
 import type { Item } from '@/types/catalog';
+import { toMoney } from '@/utils/formatCurrency';
 
 let cartItemCounter = 0;
 
@@ -8,7 +9,7 @@ export function useCart() {
   const [items, setItems] = useState<CartItem[]>([]);
 
   const total = useMemo(
-    () => items.reduce((acc, item) => acc + item.preco_unitario * item.quantidade, 0),
+    () => items.reduce((acc, item) => acc + toMoney(item.preco_unitario) * toMoney(item.quantidade), 0),
     [items],
   );
 
@@ -24,8 +25,8 @@ export function useCart() {
       opcoesSelecionadas: OpcaoSelecionada[],
       categoriaNome: string,
     ) => {
-      const adicionais = opcoesSelecionadas.reduce((s, o) => s + Number(o.preco_adicional ?? 0), 0);
-      const precoUnitario = Number(catalogItem.preco) + adicionais;
+      const adicionais = opcoesSelecionadas.reduce((s, o) => s + toMoney(o.preco_adicional ?? 0), 0);
+      const precoUnitario = toMoney(catalogItem.preco) + adicionais;
 
       const newItem: CartItem = {
         cart_item_id: `ci-${++cartItemCounter}`,
@@ -50,8 +51,8 @@ export function useCart() {
     quantidade: number,
     opcoesSelecionadas: OpcaoSelecionada[],
   ) => {
-    const adicionais = opcoesSelecionadas.reduce((s, o) => s + Number(o.preco_adicional ?? 0), 0);
-    const precoUnitario = Number(catalogItem.preco) + adicionais;
+    const adicionais = opcoesSelecionadas.reduce((s, o) => s + toMoney(o.preco_adicional ?? 0), 0);
+    const precoUnitario = toMoney(catalogItem.preco) + adicionais;
     setItems((prev) =>
       prev.map((i) =>
         i.cart_item_id !== cartItemId

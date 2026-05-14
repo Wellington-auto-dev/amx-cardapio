@@ -1,4 +1,4 @@
-import { formatCurrency } from './formatCurrency';
+import { formatCurrency, toMoney } from './formatCurrency';
 import type { EnderecoCliente } from '@/types/catalog';
 
 interface DeliveryInfo {
@@ -12,9 +12,9 @@ export function formatWhatsappMessage(
   subtotal: number,
   delivery?: DeliveryInfo,
 ): string {
-  const taxaAtiva = delivery?.taxaEntregaTipo === 'fixa' && (delivery?.taxaEntregaValor ?? 0) > 0;
-  const taxaValor = taxaAtiva ? (delivery?.taxaEntregaValor ?? 0) : 0;
-  const total = subtotal + taxaValor;
+  const taxaAtiva = delivery?.taxaEntregaTipo === 'fixa' && toMoney(delivery?.taxaEntregaValor ?? 0) > 0;
+  const taxaValor = taxaAtiva ? toMoney(delivery?.taxaEntregaValor ?? 0) : 0;
+  const total = toMoney(subtotal) + taxaValor;
 
   const partes: string[] = [
     'Novo pedido via cardapio digital:',
