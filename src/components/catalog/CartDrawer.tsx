@@ -10,6 +10,7 @@ interface CartDrawerProps {
   onClose: () => void;
   onUpdateQuantity: (cartItemId: string, quantidade: number) => void;
   onRemove: (cartItemId: string) => void;
+  onEdit?: (cartItem: CartItem) => void;
   onFinalize: () => void;
   lojaFechada?: boolean;
   taxaEntregaTipo?: string;
@@ -22,10 +23,12 @@ function CartItemRow({
   item,
   onUpdateQuantity,
   onRemove,
+  onEdit,
 }: {
   item: CartItem;
   onUpdateQuantity: (id: string, q: number) => void;
   onRemove: (id: string) => void;
+  onEdit?: (cartItem: CartItem) => void;
 }) {
   const opcoesStr = item.opcoes_selecionadas.map((o) => o.opcao_nome).join(', ');
 
@@ -50,16 +53,30 @@ function CartItemRow({
       </div>
 
       <div className="flex flex-col items-end justify-between">
-        <button
-          onClick={() => onRemove(item.cart_item_id)}
-          aria-label={`Remover ${item.nome}`}
-          className="transition-colors opacity-40 hover:opacity-100"
-          style={{ color: '#F87171' }}
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-        </button>
+        <div className="flex gap-2">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(item)}
+              aria-label={`Editar ${item.nome}`}
+              className="transition-colors opacity-40 hover:opacity-100"
+              style={{ color: 'var(--color-text-secondary)' }}
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={() => onRemove(item.cart_item_id)}
+            aria-label={`Remover ${item.nome}`}
+            className="transition-colors opacity-40 hover:opacity-100"
+            style={{ color: '#F87171' }}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
 
         <div className="flex items-center gap-2 mt-1">
           <button
@@ -194,7 +211,7 @@ function CartFooter({
 
 /** Sidebar — desktop */
 export function CartSidebar({
-  items, total, onUpdateQuantity, onRemove, onFinalize, lojaFechada,
+  items, total, onUpdateQuantity, onRemove, onEdit, onFinalize, lojaFechada,
   taxaEntregaTipo, taxaEntregaValor, pedidoMinimo, endereco,
 }: Omit<CartDrawerProps, 'open' | 'onClose'>) {
   return (
@@ -216,7 +233,7 @@ export function CartSidebar({
         <>
           <div className="flex-1 overflow-y-auto px-4 max-h-[60vh]">
             {items.map((item) => (
-              <CartItemRow key={item.cart_item_id} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} />
+              <CartItemRow key={item.cart_item_id} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} onEdit={onEdit} />
             ))}
           </div>
           <CartFooter
@@ -236,7 +253,7 @@ export function CartSidebar({
 
 /** Bottom sheet — mobile */
 export function CartDrawer({
-  items, total, open, onClose, onUpdateQuantity, onRemove, onFinalize, lojaFechada,
+  items, total, open, onClose, onUpdateQuantity, onRemove, onEdit, onFinalize, lojaFechada,
   taxaEntregaTipo, taxaEntregaValor, pedidoMinimo, endereco,
 }: CartDrawerProps) {
   const handleFinalize = () => { onFinalize(); if (!lojaFechada) onClose(); };
@@ -248,7 +265,7 @@ export function CartDrawer({
           <EmptyCart />
         ) : (
           items.map((item) => (
-            <CartItemRow key={item.cart_item_id} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} />
+            <CartItemRow key={item.cart_item_id} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} onEdit={onEdit} />
           ))
         )}
       </div>

@@ -24,8 +24,8 @@ export function useCart() {
       opcoesSelecionadas: OpcaoSelecionada[],
       categoriaNome: string,
     ) => {
-      const adicionais = opcoesSelecionadas.reduce((s, o) => s + o.preco_adicional, 0);
-      const precoUnitario = catalogItem.preco + adicionais;
+      const adicionais = opcoesSelecionadas.reduce((s, o) => s + Number(o.preco_adicional ?? 0), 0);
+      const precoUnitario = Number(catalogItem.preco) + adicionais;
 
       const newItem: CartItem = {
         cart_item_id: `ci-${++cartItemCounter}`,
@@ -43,6 +43,23 @@ export function useCart() {
     },
     [],
   );
+
+  const replaceItem = useCallback((
+    cartItemId: string,
+    catalogItem: Item,
+    quantidade: number,
+    opcoesSelecionadas: OpcaoSelecionada[],
+  ) => {
+    const adicionais = opcoesSelecionadas.reduce((s, o) => s + Number(o.preco_adicional ?? 0), 0);
+    const precoUnitario = Number(catalogItem.preco) + adicionais;
+    setItems((prev) =>
+      prev.map((i) =>
+        i.cart_item_id !== cartItemId
+          ? i
+          : { ...i, quantidade, opcoes_selecionadas: opcoesSelecionadas, preco_unitario: precoUnitario },
+      ),
+    );
+  }, []);
 
   const updateQuantity = useCallback((cartItemId: string, quantidade: number) => {
     if (quantidade <= 0) {
@@ -64,5 +81,5 @@ export function useCart() {
     setItems([]);
   }, []);
 
-  return { items, total, totalItems, addItem, updateQuantity, removeItem, clearCart };
+  return { items, total, totalItems, addItem, replaceItem, updateQuantity, removeItem, clearCart };
 }

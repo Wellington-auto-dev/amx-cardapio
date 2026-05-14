@@ -14,7 +14,7 @@ import { ToastContainer } from '@/components/ui/Toast';
 import { ItemCardSkeleton, HeaderSkeleton, TabsSkeleton } from '@/components/ui/Skeleton';
 import { abrirWhatsApp } from '@/services/whatsapp';
 import type { Item } from '@/types/catalog';
-import type { OpcaoSelecionada } from '@/types/cart';
+import type { CartItem, OpcaoSelecionada } from '@/types/cart';
 
 // ─── Desktop category sidebar ──────────────────────────────────────────────
 
@@ -106,6 +106,9 @@ export default function CatalogPage() {
 
   const [activeCategory, setActiveCategory] = useState('');
   const [modalItem, setModalItem] = useState<Item | null>(null);
+  const [modalInitSelecoes, setModalInitSelecoes] = useState<Record<string, Set<string>>>({});
+  const [modalInitQty, setModalInitQty] = useState(1);
+  const [editCartItemId, setEditCartItemId] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [busca, setBusca] = useState('');
 
@@ -168,10 +171,42 @@ export default function CatalogPage() {
     return map;
   }, [categorias]);
 
+  const handleOpenModal = useCallback((item: Item) => {
+    setEditCartItemId(null);
+    setModalInitSelecoes({});
+    setModalInitQty(1);
+    setModalItem(item);
+  }, []);
+
+  const handleEditCartItem = useCallback((cartItem: CartItem) => {
+    const catalogItem = categorias.flatMap((c) => c.itens).find((i) => i.id === cartItem.item_id);
+    if (!catalogItem) return;
+    const initSelecoes: Record<string, Set<string>> = {};
+    for (const op of cartItem.opcoes_selecionadas) {
+      if (!initSelecoes[op.grupo_id]) initSelecoes[op.grupo_id] = new Set();
+      initSelecoes[op.grupo_id].add(op.opcao_id);
+    }
+    setEditCartItemId(cartItem.cart_item_id);
+    setModalInitSelecoes(initSelecoes);
+    setModalInitQty(cartItem.quantidade);
+    setModalItem(catalogItem);
+  }, [categorias]);
+
+  const handleModalClose = useCallback(() => {
+    setModalItem(null);
+    setEditCartItemId(null);
+    setModalInitSelecoes({});
+    setModalInitQty(1);
+  }, []);
+
   const handleAddToCart = (item: Item, quantidade: number, opcoes: OpcaoSelecionada[]) => {
-    const cat = categoriaPorItemId()[item.id] ?? '';
-    cart.addItem(item, quantidade, opcoes, cat);
-    addToast('success', `${item.nome} adicionado!`);
+    if (editCartItemId) {
+      cart.replaceItem(editCartItemId, item, quantidade, opcoes);
+    } else {
+      const cat = categoriaPorItemId()[item.id] ?? '';
+      cart.addItem(item, quantidade, opcoes, cat);
+      addToast('success', `${item.nome} adicionado!`);
+    }
   };
 
   const handleFinalize = () => {
@@ -362,7 +397,7 @@ export default function CatalogPage() {
                   {itensBusca.length} {itensBusca.length === 1 ? 'resultado' : 'resultados'} para "{busca}"
                 </p>
                 {itensBusca.map((item) => (
-                  <ItemCard key={item.id} item={item} onAdd={setModalItem} />
+                  <ItemCard key={item.id} item={item} onAdd={handleOpenModal} />
                 ))}
               </div>
             )
@@ -386,7 +421,7 @@ export default function CatalogPage() {
                 </div>
                 <div className="space-y-3">
                   {cat.itens.map((item) => (
-                    <ItemCard key={item.id} item={item} onAdd={setModalItem} />
+                    <ItemCard key={item.id} item={item} onAdd={handleOpenModal} />
                   ))}
                 </div>
               </section>
@@ -400,6 +435,7 @@ export default function CatalogPage() {
           total={cart.total}
           onUpdateQuantity={cart.updateQuantity}
           onRemove={cart.removeItem}
+          onEdit={handleEditCartItem}
           onFinalize={handleFinalize}
           lojaFechada={merchant?.loja_aberta === false}
           taxaEntregaTipo={merchant?.taxa_entrega_tipo}
@@ -424,6 +460,7 @@ export default function CatalogPage() {
         onClose={() => setCartOpen(false)}
         onUpdateQuantity={cart.updateQuantity}
         onRemove={cart.removeItem}
+        onEdit={handleEditCartItem}
         onFinalize={handleFinalize}
         lojaFechada={merchant?.loja_aberta === false}
         taxaEntregaTipo={merchant?.taxa_entrega_tipo}
@@ -435,8 +472,11 @@ export default function CatalogPage() {
       <ItemModal
         item={modalItem}
         open={!!modalItem}
-        onClose={() => setModalItem(null)}
+        onClose={handleModalClose}
         onAddToCart={handleAddToCart}
+        initialSelecoes={modalInitSelecoes}
+        initialQuantidade={modalInitQty}
+        isEditing={!!editCartItemId}
       />
 
       <ToastContainer toasts={toasts} onClose={removeToast} />

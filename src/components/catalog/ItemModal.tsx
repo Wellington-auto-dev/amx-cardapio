@@ -9,19 +9,24 @@ interface ItemModalProps {
   open: boolean;
   onClose: () => void;
   onAddToCart: (item: Item, quantidade: number, opcoes: OpcaoSelecionada[]) => void;
+  initialSelecoes?: Record<string, Set<string>>;
+  initialQuantidade?: number;
+  isEditing?: boolean;
 }
 
-export function ItemModal({ item, open, onClose, onAddToCart }: ItemModalProps) {
+export function ItemModal({ item, open, onClose, onAddToCart, initialSelecoes, initialQuantidade, isEditing }: ItemModalProps) {
   const [quantidade, setQuantidade] = useState(1);
   const [selecoes, setSelecoes] = useState<Record<string, Set<string>>>({});
   const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setQuantidade(1);
-      setSelecoes({});
+      setQuantidade(initialQuantidade ?? 1);
+      setSelecoes(initialSelecoes ?? {});
       setImgError(false);
     }
+    // initialSelecoes/initialQuantidade são lidos apenas na abertura do modal
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, item?.id]);
 
   const toggleOpcao = (grupo: GrupoItem, opcao: OpcaoGrupo) => {
@@ -237,7 +242,7 @@ export function ItemModal({ item, open, onClose, onAddToCart }: ItemModalProps) 
             boxShadow: obrigatoriosCompletos ? '0 4px 16px rgb(245 166 35 / 0.35)' : 'none',
           }}
         >
-          Adicionar ao carrinho — {formatCurrency(subtotal)}
+          {isEditing ? 'Atualizar item' : 'Adicionar ao carrinho'} — {formatCurrency(subtotal)}
         </button>
       </div>
     </Modal>
