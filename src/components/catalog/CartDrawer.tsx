@@ -115,11 +115,11 @@ function CartFooter({
   pedidoMinimo?: number;
   endereco?: EnderecoCliente | null;
 }) {
-  const taxaAtiva = taxaEntregaTipo === 'fixa' && (taxaEntregaValor ?? 0) > 0;
-  const taxa = taxaAtiva ? (taxaEntregaValor ?? 0) : 0;
-  const totalFinal = total + taxa;
-  const minimo = pedidoMinimo ?? 0;
-  const abaixoMinimo = minimo > 0 && total < minimo;
+  const taxaAtiva = taxaEntregaTipo === 'fixa' && Number(taxaEntregaValor ?? 0) > 0;
+  const taxa = taxaAtiva ? Number(taxaEntregaValor ?? 0) : 0;
+  const totalFinal = Number(total) + taxa;
+  const minimo = Number(pedidoMinimo ?? 0);
+  const abaixoMinimo = minimo > 0 && Number(total) < minimo;
   const disabled = lojaFechada || abaixoMinimo;
 
   const enderecoStr = endereco
