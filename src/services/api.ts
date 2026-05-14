@@ -409,6 +409,37 @@ export async function buscarSaldoClubVip(
   return data;
 }
 
+// ─── Geocodificação e distância (via n8n → Google Maps) ───────────────────
+
+export async function geocodificarEndereco(
+  merchantId: string,
+  token: string,
+  endereco: string,
+): Promise<{ sucesso: true; lat: number; lng: number; endereco_formatado: string } | { sucesso: false; erro: string }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'geocodificar_endereco',
+    endereco,
+  });
+  return data;
+}
+
+export async function calcularDistancia(
+  merchantId: string,
+  latOrigem: number,
+  lngOrigem: number,
+  enderecoDestino: string,
+): Promise<{ sucesso: true; distancia_km: number; distancia_texto: string } | { sucesso: false; erro: string }> {
+  const { data } = await api.post('/amx-calcular-distancia', {
+    merchant_id: merchantId,
+    lat_origem: latOrigem,
+    lng_origem: lngOrigem,
+    endereco_destino: enderecoDestino,
+  });
+  return data;
+}
+
 // ─── Taxa de entrega ──────────────────────────────────────────────────────
 
 export async function salvarTaxaEntrega(

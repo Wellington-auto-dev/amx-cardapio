@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { AdminSession } from '@/types/admin';
-import { toggleLojaAberta, atualizarMensagemFechado, atualizarHorarios, salvarTaxaEntrega } from '@/services/api';
-import { geocodeEndereco } from '@/services/googleMaps';
+import { toggleLojaAberta, atualizarMensagemFechado, atualizarHorarios, salvarTaxaEntrega, geocodificarEndereco } from '@/services/api';
 import { Toggle } from '@/components/ui/Toggle';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -96,6 +95,7 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
   const [taxaValor, setTaxaValor] = useState(taxaEntregaValor);
   const [pedidoMinimoState, setPedidoMinimoState] = useState(pedidoMinimo);
   const [enderecoLoja, setEnderecoLoja] = useState('');
+  const [enderecoFormatado, setEnderecoFormatado] = useState('');
   const [latState, setLatState] = useState<number | null>(lat ?? null);
   const [lngState, setLngState] = useState<number | null>(lng ?? null);
   const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
@@ -152,12 +152,17 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
   const handleGeocodificar = async () => {
     if (!enderecoLoja.trim()) return;
     setGeocodingStatus('loading');
-    const result = await geocodeEndereco(enderecoLoja.trim());
-    if (result) {
-      setLatState(result.lat);
-      setLngState(result.lng);
-      setGeocodingStatus('success');
-    } else {
+    try {
+      const result = await geocodificarEndereco(session.merchant_id, session.token, enderecoLoja.trim());
+      if (result.sucesso) {
+        setLatState(result.lat);
+        setLngState(result.lng);
+        setEnderecoFormatado(result.endereco_formatado);
+        setGeocodingStatus('success');
+      } else {
+        setGeocodingStatus('error');
+      }
+    } catch {
       setGeocodingStatus('error');
     }
   };
@@ -395,7 +400,7 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
                   </div>
                   {geocodingStatus === 'success' && (
                     <p className="text-xs mt-1.5 font-600" style={{ color: '#10B981' }}>
-                      Localização encontrada ({latState?.toFixed(4)}, {lngState?.toFixed(4)})
+                      Endereço localizado: {enderecoFormatado || `(${latState?.toFixed(4)}, ${lngState?.toFixed(4)})`}
                     </p>
                   )}
                   {geocodingStatus === 'error' && (
@@ -405,7 +410,7 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
                   )}
                   {geocodingStatus === 'idle' && latState && lngState && (
                     <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
-                      Localização atual: ({latState.toFixed(4)}, {lngState.toFixed(4)})
+                      Localização configurada — clique em Localizar para atualizar.
                     </p>
                   )}
                 </div>

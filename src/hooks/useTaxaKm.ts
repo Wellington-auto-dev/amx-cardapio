@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Merchant, EnderecoCliente } from '@/types/catalog';
-import { calcularDistanciaKm } from '@/services/googleMaps';
+import { calcularDistancia } from '@/services/api';
 import { toMoney } from '@/utils/formatCurrency';
 
 interface UseTaxaKmResult {
@@ -18,6 +18,7 @@ export function useTaxaKm(
   const [calculando, setCalculando] = useState(false);
 
   const isKm = merchant?.taxa_entrega_tipo === 'km';
+  const merchantId = merchant?.merchant_id ?? '';
   const lat = merchant?.lat ?? null;
   const lng = merchant?.lng ?? null;
   const taxaValorPorKm = toMoney(merchant?.taxa_entrega_valor ?? 0);
@@ -28,7 +29,7 @@ export function useTaxaKm(
     : null;
 
   useEffect(() => {
-    if (!isKm || !lat || !lng || !enderecoStr) {
+    if (!isKm || !merchantId || !lat || !lng || !enderecoStr) {
       setTaxaCalculada(null);
       setDistanciaKm(null);
       setCalculando(false);
@@ -38,21 +39,26 @@ export function useTaxaKm(
     let cancelled = false;
     setCalculando(true);
 
-    calcularDistanciaKm(lat, lng, enderecoStr).then((km) => {
+    calcularDistancia(merchantId, lat, lng, enderecoStr).then((result) => {
       if (cancelled) return;
-      if (km !== null) {
-        setDistanciaKm(km);
-        setTaxaCalculada(Math.ceil(km) * taxaValorPorKm);
+      if (result.sucesso) {
+        setDistanciaKm(result.distancia_km);
+        setTaxaCalculada(Math.ceil(result.distancia_km) * taxaValorPorKm);
       } else {
         setDistanciaKm(null);
         setTaxaCalculada(null);
       }
       setCalculando(false);
+    }).catch(() => {
+      if (cancelled) return;
+      setDistanciaKm(null);
+      setTaxaCalculada(null);
+      setCalculando(false);
     });
 
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isKm, lat, lng, enderecoStr, taxaValorPorKm]);
+  }, [isKm, merchantId, lat, lng, enderecoStr, taxaValorPorKm]);
 
   return { taxaCalculada, distanciaKm, calculando };
 }
