@@ -50,8 +50,8 @@ export function ItemModal({ item, open, onClose, onAddToCart }: ItemModalProps) 
     if (!item) return 0;
     const adicionais = item.grupos
       .flatMap((g) => g.opcoes.filter((o) => selecoes[g.id]?.has(o.id)))
-      .reduce((s, o) => s + o.preco_adicional, 0);
-    return (item.preco + adicionais) * quantidade;
+      .reduce((s, o) => s + Number(o.preco_adicional ?? 0), 0);
+    return (Number(item.preco) + adicionais) * quantidade;
   }, [item, selecoes, quantidade]);
 
   const opcoesSelecionadas = useMemo((): OpcaoSelecionada[] => {

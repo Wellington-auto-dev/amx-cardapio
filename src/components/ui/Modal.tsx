@@ -50,6 +50,7 @@ export function Modal({
         style={{
           maxWidth,
           width: '100%',
+          maxHeight: '90vh',
           backgroundColor: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
         }}
