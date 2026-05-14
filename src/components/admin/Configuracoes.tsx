@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { AdminSession } from '@/types/admin';
-import { toggleLojaAberta, atualizarMensagemFechado, atualizarHorarios } from '@/services/api';
+import { toggleLojaAberta, atualizarMensagemFechado, atualizarHorarios, salvarTaxaEntrega } from '@/services/api';
 import { Toggle } from '@/components/ui/Toggle';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -17,6 +17,9 @@ interface ConfiguracoesProps {
   lojaAberta: boolean;
   mensagemFechado: string;
   horarios?: Partial<Horarios>;
+  taxaEntregaTipo?: string;
+  taxaEntregaValor?: number;
+  pedidoMinimo?: number;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -73,7 +76,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 // ─── Main component ────────────────────────────────────────────────────────
 
-export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, horarios }: ConfiguracoesProps) {
+export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, horarios, taxaEntregaTipo = 'nenhuma', taxaEntregaValor = 0, pedidoMinimo = 0 }: ConfiguracoesProps) {
   // ── Status ──────────────────────────────────────────────────────────────
   const [lojaAbertaState, setLojaAbertaState] = useState(lojaAberta);
   const [togglingLoja, setTogglingLoja] = useState(false);
@@ -83,6 +86,12 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
   // ── Horários ────────────────────────────────────────────────────────────
   const [horariosState, setHorariosState] = useState<Horarios>(() => buildHorarios(horarios));
   const [savingHorarios, setSavingHorarios] = useState(false);
+
+  // ── Taxa de entrega ──────────────────────────────────────────────────────
+  const [taxaAtiva, setTaxaAtiva] = useState(taxaEntregaTipo !== 'nenhuma');
+  const [taxaValor, setTaxaValor] = useState(taxaEntregaValor);
+  const [pedidoMinimoState, setPedidoMinimoState] = useState(pedidoMinimo);
+  const [savingTaxa, setSavingTaxa] = useState(false);
 
   // ── Helpers ─────────────────────────────────────────────────────────────
   const [copied, setCopied] = useState(false);
@@ -127,6 +136,23 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
       // silent
     } finally {
       setSavingHorarios(false);
+    }
+  };
+
+  const handleSaveTaxa = async () => {
+    setSavingTaxa(true);
+    try {
+      await salvarTaxaEntrega(session.merchant_id, session.token, {
+        taxa_entrega_tipo: taxaAtiva ? 'fixa' : 'nenhuma',
+        taxa_entrega_valor: taxaValor,
+        pedido_minimo: pedidoMinimoState,
+        lat: null,
+        lng: null,
+      });
+    } catch {
+      // silent
+    } finally {
+      setSavingTaxa(false);
     }
   };
 
@@ -254,7 +280,92 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
         </div>
       </div>
 
-      {/* ── Seção 3: Link do Cardápio ─────────────────────────────────────── */}
+      {/* ── Seção 3: Taxa de Entrega ──────────────────────────────────────── */}
+      <div style={sectionCard}>
+        <SectionTitle>Taxa de Entrega</SectionTitle>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Toggle
+              checked={taxaAtiva}
+              onChange={setTaxaAtiva}
+              ariaLabel="Ativar taxa de entrega"
+            />
+            <span
+              className="text-sm font-600"
+              style={{ color: taxaAtiva ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}
+            >
+              {taxaAtiva ? 'Taxa ativa' : 'Sem taxa de entrega'}
+            </span>
+          </div>
+
+          {taxaAtiva && (
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+                  Tipo de taxa
+                </p>
+                <div
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-700"
+                  style={{
+                    backgroundColor: 'rgb(245 166 35 / 0.12)',
+                    color: 'var(--color-primary)',
+                    border: '1px solid rgb(245 166 35 / 0.3)',
+                  }}
+                >
+                  Fixa
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="cfg-taxa-valor" className="block text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+                  Valor da taxa (R$)
+                </label>
+                <input
+                  id="cfg-taxa-valor"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={taxaValor}
+                  onChange={(e) => setTaxaValor(Number(e.target.value))}
+                  placeholder="0,00"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="cfg-pedido-minimo" className="block text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+                  Pedido minimo (R$)
+                </label>
+                <input
+                  id="cfg-pedido-minimo"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={pedidoMinimoState}
+                  onChange={(e) => setPedidoMinimoState(Number(e.target.value))}
+                  placeholder="0,00"
+                  style={inputStyle}
+                />
+                <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                  0 = sem pedido minimo
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={handleSaveTaxa}
+            disabled={savingTaxa}
+            className="px-4 py-2 rounded-xl text-sm font-600 transition-opacity disabled:opacity-40 hover:opacity-85"
+            style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D', cursor: 'pointer' }}
+          >
+            {savingTaxa ? 'Salvando...' : 'Salvar Taxa'}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Seção 4: Link do Cardápio ─────────────────────────────────────── */}
       <div style={sectionCard}>
         <SectionTitle>Link do Cardápio</SectionTitle>
 

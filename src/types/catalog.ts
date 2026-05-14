@@ -1,5 +1,13 @@
 // Tipos do cardápio público
 
+export interface EnderecoCliente {
+  cep: string | null;
+  endereco_logradouro: string | null;
+  endereco_numero: string | null;
+  endereco_complemento: string | null;
+  cidade: string | null;
+}
+
 export interface OpcaoGrupo {
   id: string;
   nome: string;
@@ -37,6 +45,11 @@ export interface Merchant {
   whatsapp_numero: string;
   loja_aberta: boolean;
   mensagem_fechado: string;
+  taxa_entrega_tipo: string;
+  taxa_entrega_valor: number;
+  pedido_minimo: number;
+  lat: number | null;
+  lng: number | null;
   horarios?: {
     segunda:  { aberto: boolean; abertura: string; fechamento: string };
     terca:    { aberto: boolean; abertura: string; fechamento: string };

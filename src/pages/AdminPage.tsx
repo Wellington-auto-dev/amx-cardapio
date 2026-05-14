@@ -575,6 +575,9 @@ export default function AdminPage() {
                       lojaAberta={merchant?.loja_aberta ?? true}
                       mensagemFechado={merchant?.mensagem_fechado ?? 'Estamos fechados no momento. Volte em breve!'}
                       horarios={merchant?.horarios}
+                      taxaEntregaTipo={merchant?.taxa_entrega_tipo}
+                      taxaEntregaValor={merchant?.taxa_entrega_valor}
+                      pedidoMinimo={merchant?.pedido_minimo}
                     />
                   </div>
                 )}

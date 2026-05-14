@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Merchant } from '@/types/catalog';
+import type { Merchant, EnderecoCliente } from '@/types/catalog';
 import type { ItemManualPayload, ClubVipConfig, ClubVipNivel, ClubVipSaldo, ClubVipResgate, CategoriaOrdem, GrupoEditPayload } from '@/types/admin';
 import type { ParsedPlanilha } from '@/services/excel';
 import { montarPayloadPlanilha } from '@/services/excel';
@@ -400,6 +400,7 @@ export async function buscarSaldoClubVip(
   pontos_atuais?: number;
   pontos_por_compra?: number;
   proximo_nivel?: { meta_pontos: number; brinde: string; faltam?: number };
+  endereco?: EnderecoCliente | null;
 }> {
   const { data } = await api.post('/amx-clubvip-saldo', {
     merchant_id: merchantId,
@@ -408,7 +409,27 @@ export async function buscarSaldoClubVip(
   return data;
 }
 
-// ─── Chat ─────────────────────────────────────────────────────────────────
+// ─── Taxa de entrega ──────────────────────────────────────────────────────
+
+export async function salvarTaxaEntrega(
+  merchantId: string,
+  token: string,
+  payload: {
+    taxa_entrega_tipo: string;
+    taxa_entrega_valor: number;
+    pedido_minimo: number;
+    lat: number | null;
+    lng: number | null;
+  },
+): Promise<{ sucesso: boolean }> {
+  const { data } = await api.post('/amx-cardapio-admin', {
+    merchant_id: merchantId,
+    token,
+    acao: 'salvar_taxa_entrega',
+    ...payload,
+  });
+  return data;
+}
 
 // ─── Categorias ───────────────────────────────────────────────────────────
 

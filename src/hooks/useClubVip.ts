@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { buscarSaldoClubVip } from '@/services/api';
+import type { EnderecoCliente } from '@/types/catalog';
 
 interface ProximoNivel {
   meta_pontos: number;
@@ -14,12 +15,14 @@ export function useClubVip(merchantId: string, phone: string | null) {
   const [pontosAtuais, setPontosAtuais] = useState(0);
   const [pontosPorCompra, setPontosPorCompra] = useState(1);
   const [proximoNivel, setProximoNivel] = useState<ProximoNivel | null>(null);
+  const [endereco, setEndereco] = useState<EnderecoCliente | null>(null);
 
   useEffect(() => {
     if (!phone || !merchantId) {
       setClubAtivo(false);
       setPontosAtuais(0);
       setProximoNivel(null);
+      setEndereco(null);
       setHasChecked(false);
       return;
     }
@@ -41,12 +44,14 @@ export function useClubVip(merchantId: string, phone: string | null) {
           setPontosAtuais(0);
           setProximoNivel(null);
         }
+        setEndereco(res.endereco ?? null);
       })
       .catch(() => {
         if (!cancelled) {
           setClubAtivo(false);
           setPontosAtuais(0);
           setProximoNivel(null);
+          setEndereco(null);
         }
       })
       .finally(() => {
@@ -59,5 +64,5 @@ export function useClubVip(merchantId: string, phone: string | null) {
     return () => { cancelled = true; };
   }, [merchantId, phone]);
 
-  return { clubAtivo, pontosAtuais, pontosPorCompra, proximoNivel, isLoading, hasChecked };
+  return { clubAtivo, pontosAtuais, pontosPorCompra, proximoNivel, endereco, isLoading, hasChecked };
 }

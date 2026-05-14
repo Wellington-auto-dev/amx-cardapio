@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/useToast';
@@ -70,22 +70,30 @@ function CategorySidebar({
 
 export default function CatalogPage() {
   const { slug = '' } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
   const { data: merchant, isLoading, isError } = useCatalog(slug);
   const cart = useCart();
   const { toasts, addToast, removeToast } = useToast();
 
-  const [phone, setPhoneState] = useState<string | null>(
-    () => localStorage.getItem('amx-phone') || null,
-  );
+  const phoneKey = `amx-phone-${slug}`;
+  const urlPhone = searchParams.get('phone');
+
+  const [phone, setPhoneState] = useState<string | null>(() => {
+    if (urlPhone) {
+      localStorage.setItem(`amx-phone-${slug}`, urlPhone);
+      return urlPhone;
+    }
+    return localStorage.getItem(`amx-phone-${slug}`) || null;
+  });
 
   const handleSetPhone = useCallback((p: string) => {
     if (p) {
-      localStorage.setItem('amx-phone', p);
+      localStorage.setItem(phoneKey, p);
     } else {
-      localStorage.removeItem('amx-phone');
+      localStorage.removeItem(phoneKey);
     }
     setPhoneState(p || null);
-  }, []);
+  }, [phoneKey]);
 
   const clubVip = useClubVip(merchant?.merchant_id ?? '', phone);
 
@@ -172,7 +180,11 @@ export default function CatalogPage() {
       addToast('error', merchant.mensagem_fechado);
       return;
     }
-    abrirWhatsApp(merchant.whatsapp_numero, cart.items, cart.total);
+    abrirWhatsApp(merchant.whatsapp_numero, cart.items, cart.total, {
+      endereco: clubVip.endereco ?? null,
+      taxaEntregaTipo: merchant.taxa_entrega_tipo ?? 'nenhuma',
+      taxaEntregaValor: merchant.taxa_entrega_valor ?? 0,
+    });
     cart.clearCart();
   };
 
@@ -390,6 +402,10 @@ export default function CatalogPage() {
           onRemove={cart.removeItem}
           onFinalize={handleFinalize}
           lojaFechada={merchant?.loja_aberta === false}
+          taxaEntregaTipo={merchant?.taxa_entrega_tipo}
+          taxaEntregaValor={merchant?.taxa_entrega_valor}
+          pedidoMinimo={merchant?.pedido_minimo}
+          endereco={clubVip.endereco}
         />
       </div>
 
@@ -410,6 +426,10 @@ export default function CatalogPage() {
         onRemove={cart.removeItem}
         onFinalize={handleFinalize}
         lojaFechada={merchant?.loja_aberta === false}
+        taxaEntregaTipo={merchant?.taxa_entrega_tipo}
+        taxaEntregaValor={merchant?.taxa_entrega_valor}
+        pedidoMinimo={merchant?.pedido_minimo}
+        endereco={clubVip.endereco}
       />
 
       <ItemModal

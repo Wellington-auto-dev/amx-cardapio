@@ -1,4 +1,5 @@
 import type { CartItem } from '@/types/cart';
+import type { EnderecoCliente } from '@/types/catalog';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { formatCurrency } from '@/utils/formatCurrency';
 
@@ -11,6 +12,10 @@ interface CartDrawerProps {
   onRemove: (cartItemId: string) => void;
   onFinalize: () => void;
   lojaFechada?: boolean;
+  taxaEntregaTipo?: string;
+  taxaEntregaValor?: number;
+  pedidoMinimo?: number;
+  endereco?: EnderecoCliente | null;
 }
 
 function CartItemRow({
@@ -30,7 +35,7 @@ function CartItemRow({
         <img
           src={item.foto_url}
           alt={item.nome}
-          className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+          className="w-12 h-12 rounded-lg object-cover shrink-0"
           loading="lazy"
         />
       )}
@@ -93,22 +98,91 @@ function EmptyCart() {
   );
 }
 
-function CartFooter({ total, onFinalize, lojaFechada }: { total: number; onFinalize: () => void; lojaFechada?: boolean }) {
+function CartFooter({
+  total,
+  onFinalize,
+  lojaFechada,
+  taxaEntregaTipo,
+  taxaEntregaValor,
+  pedidoMinimo,
+  endereco,
+}: {
+  total: number;
+  onFinalize: () => void;
+  lojaFechada?: boolean;
+  taxaEntregaTipo?: string;
+  taxaEntregaValor?: number;
+  pedidoMinimo?: number;
+  endereco?: EnderecoCliente | null;
+}) {
+  const taxaAtiva = taxaEntregaTipo === 'fixa' && (taxaEntregaValor ?? 0) > 0;
+  const taxa = taxaAtiva ? (taxaEntregaValor ?? 0) : 0;
+  const totalFinal = total + taxa;
+  const minimo = pedidoMinimo ?? 0;
+  const abaixoMinimo = minimo > 0 && total < minimo;
+  const disabled = lojaFechada || abaixoMinimo;
+
+  const enderecoStr = endereco
+    ? [endereco.endereco_logradouro, endereco.endereco_numero, endereco.cidade].filter(Boolean).join(', ')
+    : null;
+
   return (
     <div className="px-4 pb-6 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+      {enderecoStr && (
+        <div className="flex gap-1.5 mb-3 items-start">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          </svg>
+          <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+            Entregando em: {enderecoStr}
+          </span>
+        </div>
+      )}
+
+      {taxaAtiva && (
+        <div className="space-y-1.5 mb-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Subtotal</span>
+            <span className="text-sm font-600" style={{ color: 'var(--color-text)' }}>{formatCurrency(total)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Taxa de entrega</span>
+            <span className="text-sm font-600" style={{ color: 'var(--color-text)' }}>{formatCurrency(taxa)}</span>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-3">
         <span className="font-600" style={{ color: 'var(--color-text-secondary)' }}>Total</span>
-        <span className="font-700 text-lg" style={{ color: 'var(--color-text)' }}>{formatCurrency(total)}</span>
+        <span className="font-700 text-lg" style={{ color: 'var(--color-text)' }}>{formatCurrency(totalFinal)}</span>
       </div>
+
+      {abaixoMinimo && (
+        <div
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg mb-3 text-xs font-600"
+          style={{
+            backgroundColor: 'rgb(245 166 35 / 0.1)',
+            border: '1px solid rgb(245 166 35 / 0.3)',
+            color: 'var(--color-primary)',
+          }}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 shrink-0">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          Pedido minimo: {formatCurrency(minimo)}
+        </div>
+      )}
+
       <button
         onClick={onFinalize}
+        disabled={disabled}
         className="w-full py-3.5 rounded-xl font-700 text-sm flex items-center justify-center gap-2 transition-all"
         style={{
           backgroundColor: 'var(--color-whatsapp)',
           color: '#fff',
-          boxShadow: lojaFechada ? 'none' : '0 4px 16px rgb(37 211 102 / 0.3)',
-          opacity: lojaFechada ? 0.45 : 1,
-          cursor: lojaFechada ? 'not-allowed' : 'pointer',
+          boxShadow: disabled ? 'none' : '0 4px 16px rgb(37 211 102 / 0.3)',
+          opacity: disabled ? 0.45 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer',
         }}
       >
         <WhatsAppIcon />
@@ -121,10 +195,11 @@ function CartFooter({ total, onFinalize, lojaFechada }: { total: number; onFinal
 /** Sidebar — desktop */
 export function CartSidebar({
   items, total, onUpdateQuantity, onRemove, onFinalize, lojaFechada,
+  taxaEntregaTipo, taxaEntregaValor, pedidoMinimo, endereco,
 }: Omit<CartDrawerProps, 'open' | 'onClose'>) {
   return (
     <aside
-      className="hidden md:flex w-80 flex-shrink-0 flex-col rounded-2xl h-fit sticky top-4"
+      className="hidden md:flex w-80 shrink-0 flex-col rounded-2xl h-fit sticky top-4"
       style={{
         backgroundColor: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
@@ -144,7 +219,15 @@ export function CartSidebar({
               <CartItemRow key={item.cart_item_id} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} />
             ))}
           </div>
-          <CartFooter total={total} onFinalize={onFinalize} lojaFechada={lojaFechada} />
+          <CartFooter
+            total={total}
+            onFinalize={onFinalize}
+            lojaFechada={lojaFechada}
+            taxaEntregaTipo={taxaEntregaTipo}
+            taxaEntregaValor={taxaEntregaValor}
+            pedidoMinimo={pedidoMinimo}
+            endereco={endereco}
+          />
         </>
       )}
     </aside>
@@ -154,6 +237,7 @@ export function CartSidebar({
 /** Bottom sheet — mobile */
 export function CartDrawer({
   items, total, open, onClose, onUpdateQuantity, onRemove, onFinalize, lojaFechada,
+  taxaEntregaTipo, taxaEntregaValor, pedidoMinimo, endereco,
 }: CartDrawerProps) {
   const handleFinalize = () => { onFinalize(); if (!lojaFechada) onClose(); };
 
@@ -168,7 +252,17 @@ export function CartDrawer({
           ))
         )}
       </div>
-      {items.length > 0 && <CartFooter total={total} onFinalize={handleFinalize} lojaFechada={lojaFechada} />}
+      {items.length > 0 && (
+        <CartFooter
+          total={total}
+          onFinalize={handleFinalize}
+          lojaFechada={lojaFechada}
+          taxaEntregaTipo={taxaEntregaTipo}
+          taxaEntregaValor={taxaEntregaValor}
+          pedidoMinimo={pedidoMinimo}
+          endereco={endereco}
+        />
+      )}
     </BottomSheet>
   );
 }
