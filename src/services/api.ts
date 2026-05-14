@@ -409,7 +409,7 @@ export async function buscarSaldoClubVip(
   return data;
 }
 
-// ─── Geocodificação e distância (via n8n → Google Maps) ───────────────────
+// ─── Geocodificação e distância (via n8n → Nominatim/OpenStreetMap) ────────
 
 export async function geocodificarEndereco(
   merchantId: string,
