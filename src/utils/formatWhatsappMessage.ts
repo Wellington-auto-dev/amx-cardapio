@@ -40,7 +40,7 @@ export function formatWhatsappMessage(
   if (taxaAtiva) {
     partes.push(`Subtotal: ${formatCurrency(subtotal)}`);
     const distStr = isKm && delivery?.distanciaKm != null
-      ? ` (${delivery.distanciaKm.toFixed(1)} km)`
+      ? ` (${Number(delivery.distanciaKm).toFixed(1)} km)`
       : '';
     partes.push(`Taxa de entrega: ${formatCurrency(taxaValor)}${distStr}`);
   }

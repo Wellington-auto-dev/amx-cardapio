@@ -96,10 +96,10 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
   const [pedidoMinimoState, setPedidoMinimoState] = useState(pedidoMinimo);
   const [enderecoLoja, setEnderecoLoja] = useState('');
   const [enderecoFormatado, setEnderecoFormatado] = useState('');
-  const [latState, setLatState] = useState<number | null>(lat ?? null);
-  const [lngState, setLngState] = useState<number | null>(lng ?? null);
+  const [latState, setLatState] = useState<number | null>(lat != null ? Number(lat) : null);
+  const [lngState, setLngState] = useState<number | null>(lng != null ? Number(lng) : null);
   const [geocodingStatus, setGeocodingStatus] = useState<'idle' | 'loading' | 'success' | 'error'>(
-    (lat && lng) ? 'success' : 'idle',
+    (lat != null && lng != null && Number(lat) !== 0 && Number(lng) !== 0) ? 'success' : 'idle',
   );
   const [savingTaxa, setSavingTaxa] = useState(false);
 
@@ -400,7 +400,7 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
                   </div>
                   {geocodingStatus === 'success' && (
                     <p className="text-xs mt-1.5 font-600" style={{ color: '#10B981' }}>
-                      Endereço localizado: {enderecoFormatado || `(${latState?.toFixed(4)}, ${lngState?.toFixed(4)})`}
+                      Endereço localizado: {enderecoFormatado || `(${Number(latState).toFixed(4)}, ${Number(lngState).toFixed(4)})`}
                     </p>
                   )}
                   {geocodingStatus === 'error' && (

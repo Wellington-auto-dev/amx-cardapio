@@ -185,7 +185,7 @@ function CartFooter({
                 : isKm && taxaKmCalculada == null
                   ? 'Na entrega'
                   : isKm && distanciaKm != null
-                    ? `${formatCurrency(taxa)} (${distanciaKm.toFixed(1)} km)`
+                    ? `${formatCurrency(taxa)} (${Number(distanciaKm).toFixed(1)} km)`
                     : formatCurrency(taxa)}
             </span>
           </div>
