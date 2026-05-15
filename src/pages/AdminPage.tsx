@@ -569,18 +569,34 @@ export default function AdminPage() {
                       onLogoUpdated={(url) => { setLogoUrl(url); handleRefresh(); }}
                       onToast={toast}
                     />
-                    <Configuracoes
-                      session={session}
-                      slug={slug}
-                      lojaAberta={merchant?.loja_aberta ?? true}
-                      mensagemFechado={merchant?.mensagem_fechado ?? 'Estamos fechados no momento. Volte em breve!'}
-                      horarios={merchant?.horarios}
-                      taxaEntregaTipo={merchant?.taxa_entrega_tipo}
-                      taxaEntregaValor={merchant?.taxa_entrega_valor}
-                      pedidoMinimo={merchant?.pedido_minimo}
-                      lat={merchant?.lat}
-                      lng={merchant?.lng}
-                    />
+                    {merchant ? (
+                      <Configuracoes
+                        key={merchant.merchant_id}
+                        session={session}
+                        slug={slug}
+                        lojaAberta={merchant.loja_aberta}
+                        mensagemFechado={merchant.mensagem_fechado}
+                        horarios={merchant.horarios}
+                        taxaEntregaTipo={merchant.taxa_entrega_tipo}
+                        taxaEntregaValor={merchant.taxa_entrega_valor}
+                        pedidoMinimo={merchant.pedido_minimo}
+                        lat={merchant.lat}
+                        lng={merchant.lng}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          backgroundColor: 'var(--color-surface)',
+                          border: '1px solid var(--color-border)',
+                          borderRadius: 16,
+                          padding: 20,
+                        }}
+                      >
+                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                          Carregando configuracoes...
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

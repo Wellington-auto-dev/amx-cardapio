@@ -224,10 +224,10 @@ export function ClubVipBanner({
                 fontWeight: 600,
                 border: '1px solid var(--color-border)',
                 cursor: 'pointer',
-                background: !resgateAtivo ? 'var(--color-surface-2)' : 'transparent',
-                color: !resgateAtivo ? 'var(--color-text)' : 'var(--color-text-muted)',
-                transition: 'background 0.2s, color 0.2s',
-                opacity: resgateAtivo ? 0.6 : 1,
+                background: 'var(--color-surface-2)',
+                color: 'var(--color-text-secondary)',
+                transition: 'background 0.2s',
+                opacity: 1,
               }}
             >
               Continuar acumulando
