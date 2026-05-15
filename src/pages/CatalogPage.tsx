@@ -402,6 +402,7 @@ export default function CatalogPage() {
           <ClubVipBanner
             phone={phone}
             setPhone={handleSetPhone}
+            merchantId={merchant?.merchant_id ?? ''}
             clubAtivo={clubVip.clubAtivo}
             pontosAtuais={clubVip.pontosAtuais}
             pontosPorCompra={clubVip.pontosPorCompra}
@@ -413,6 +414,7 @@ export default function CatalogPage() {
             nivelMaximoAtingido={clubVip.nivelMaximoAtingido}
             resgateEscolhido={clubVip.resgateEscolhido}
             setResgateEscolhido={clubVip.setResgateEscolhido}
+            addToast={addToast}
           />
 
           {isLoading ? (

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { registrarIntencaoClubVip } from '@/services/api';
 
 interface ProximoNivel {
   meta_pontos: number;
@@ -15,6 +16,7 @@ interface NivelResgatavel {
 interface ClubVipBannerProps {
   phone: string | null;
   setPhone: (phone: string) => void;
+  merchantId: string;
   clubAtivo: boolean;
   pontosAtuais: number;
   pontosPorCompra: number;
@@ -26,11 +28,13 @@ interface ClubVipBannerProps {
   nivelMaximoAtingido: boolean;
   resgateEscolhido: string | null;
   setResgateEscolhido: (id: string | null) => void;
+  addToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message?: string) => void;
 }
 
 export function ClubVipBanner({
   phone,
   setPhone,
+  merchantId,
   clubAtivo,
   pontosAtuais,
   pontosPorCompra,
@@ -42,8 +46,33 @@ export function ClubVipBanner({
   nivelMaximoAtingido,
   resgateEscolhido,
   setResgateEscolhido,
+  addToast,
 }: ClubVipBannerProps) {
   const [draft, setDraft] = useState('');
+
+  const resgateAtivo = resgateEscolhido !== null;
+
+  const handleResgatar = async () => {
+    if (!nivelResgatavel || resgateAtivo || !phone) return;
+    setResgateEscolhido(nivelResgatavel.id);
+    addToast('success', `Resgate de ${nivelResgatavel.brinde} selecionado!`);
+    try {
+      await registrarIntencaoClubVip(phone, merchantId, nivelResgatavel.id, 'resgatar');
+    } catch {
+      // silent — fluxo do cliente nao e bloqueado
+    }
+  };
+
+  const handleAcumular = async () => {
+    if (!phone) return;
+    setResgateEscolhido(null);
+    addToast('success', 'Voce continuara acumulando pontos');
+    try {
+      await registrarIntencaoClubVip(phone, merchantId, null, 'acumular');
+    } catch {
+      // silent
+    }
+  };
 
   if (!phone) {
     return (
@@ -95,8 +124,6 @@ export function ClubVipBanner({
     ? Math.min(100, Math.round((pontosAtuais / proximoNivel.meta_pontos) * 100))
     : 100;
 
-  const resgateAtivo = resgateEscolhido !== null;
-
   return (
     <div style={{ border: '1px solid var(--color-border)', borderRadius: 16, padding: '12px 16px', marginBottom: 8, backgroundColor: 'var(--color-surface)' }}>
 
@@ -140,7 +167,7 @@ export function ClubVipBanner({
             </p>
           </div>
           <button
-            onClick={() => setResgateEscolhido(resgateAtivo ? null : nivelResgatavel.id)}
+            onClick={handleResgatar}
             style={{
               width: '100%',
               borderRadius: 10,
@@ -148,7 +175,7 @@ export function ClubVipBanner({
               fontSize: 13,
               fontWeight: 700,
               border: 'none',
-              cursor: 'pointer',
+              cursor: resgateAtivo ? 'default' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -185,7 +212,7 @@ export function ClubVipBanner({
           </div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
             <button
-              onClick={() => setResgateEscolhido(resgateAtivo ? null : nivelResgatavel.id)}
+              onClick={handleResgatar}
               style={{
                 flex: 1,
                 borderRadius: 10,
@@ -193,7 +220,7 @@ export function ClubVipBanner({
                 fontSize: 13,
                 fontWeight: 700,
                 border: 'none',
-                cursor: 'pointer',
+                cursor: resgateAtivo ? 'default' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -215,7 +242,7 @@ export function ClubVipBanner({
               )}
             </button>
             <button
-              onClick={() => setResgateEscolhido(null)}
+              onClick={handleAcumular}
               style={{
                 flex: 1,
                 borderRadius: 10,

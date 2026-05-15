@@ -58,7 +58,6 @@ export function formatWhatsappMessage(
   if (resgateInfo) {
     partes.push('');
     partes.push(`*Resgate Club VIP: ${resgateInfo.brinde}*`);
-    partes.push(`nivel_id: ${resgateInfo.nivelId}`);
   }
 
   partes.push('');

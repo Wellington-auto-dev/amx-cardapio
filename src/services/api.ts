@@ -391,6 +391,21 @@ export async function configurarClubVip(
   return data;
 }
 
+export async function registrarIntencaoClubVip(
+  phone: string,
+  merchantId: string,
+  nivelId: string | null,
+  decisao: 'resgatar' | 'acumular',
+): Promise<{ sucesso: true }> {
+  const { data } = await api.post('/amx-clubvip-intencao', {
+    phone,
+    merchant_id: merchantId,
+    nivel_id: nivelId,
+    decisao,
+  });
+  return data;
+}
+
 export async function buscarSaldoClubVip(
   merchantId: string,
   phone: string,
