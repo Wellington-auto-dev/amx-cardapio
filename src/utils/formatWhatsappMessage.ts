@@ -9,10 +9,16 @@ interface DeliveryInfo {
   distanciaKm?: number | null;
 }
 
+interface ResgateInfo {
+  nivelId: string;
+  brinde: string;
+}
+
 export function formatWhatsappMessage(
   linhas: string[],
   subtotal: number,
   delivery?: DeliveryInfo,
+  resgateInfo?: ResgateInfo | null,
 ): string {
   const isFixa = delivery?.taxaEntregaTipo === 'fixa' && toMoney(delivery?.taxaEntregaValor ?? 0) > 0;
   const isKm = delivery?.taxaEntregaTipo === 'km' && (delivery?.taxaKmCalculada ?? 0) > 0;
@@ -47,6 +53,12 @@ export function formatWhatsappMessage(
       partes.push('');
       partes.push(`Endereco: ${endStr}`);
     }
+  }
+
+  if (resgateInfo) {
+    partes.push('');
+    partes.push(`*Resgate Club VIP: ${resgateInfo.brinde}*`);
+    partes.push(`nivel_id: ${resgateInfo.nivelId}`);
   }
 
   partes.push('');

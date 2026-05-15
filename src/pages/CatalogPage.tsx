@@ -219,13 +219,16 @@ export default function CatalogPage() {
       addToast('error', merchant.mensagem_fechado);
       return;
     }
+    const resgateInfo = clubVip.resgateEscolhido && clubVip.nivelResgatavel
+      ? { nivelId: clubVip.resgateEscolhido, brinde: clubVip.nivelResgatavel.brinde }
+      : null;
     abrirWhatsApp(merchant.whatsapp_numero, cart.items, cart.total, {
       endereco: clubVip.endereco ?? null,
       taxaEntregaTipo: merchant.taxa_entrega_tipo ?? 'nenhuma',
       taxaEntregaValor: merchant.taxa_entrega_valor ?? 0,
       taxaKmCalculada: taxaKm.taxaCalculada,
       distanciaKm: taxaKm.distanciaKm,
-    });
+    }, resgateInfo);
     cart.clearCart();
   };
 
@@ -405,6 +408,11 @@ export default function CatalogPage() {
             proximoNivel={clubVip.proximoNivel}
             isLoading={clubVip.isLoading}
             hasChecked={clubVip.hasChecked}
+            resgateDisponivel={clubVip.resgateDisponivel}
+            nivelResgatavel={clubVip.nivelResgatavel}
+            nivelMaximoAtingido={clubVip.nivelMaximoAtingido}
+            resgateEscolhido={clubVip.resgateEscolhido}
+            setResgateEscolhido={clubVip.setResgateEscolhido}
           />
 
           {isLoading ? (
