@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { AdminSession } from '@/types/admin';
-import { toggleLojaAberta, atualizarMensagemFechado, atualizarHorarios, salvarTaxaEntrega, geocodificarEndereco } from '@/services/api';
+import { toggleLojaAberta, atualizarMensagemFechado, atualizarHorarios, salvarTaxaEntrega, geocodificarEndereco, salvarConfigStripe } from '@/services/api';
 import { Toggle } from '@/components/ui/Toggle';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -22,6 +22,10 @@ interface ConfiguracoesProps {
   pedidoMinimo?: number;
   lat?: number | null;
   lng?: number | null;
+  stripeAtivo?: boolean;
+  stripePublicKey?: string | null;
+  pagamentoNaEntrega?: boolean;
+  onToast?: (type: 'success' | 'error', title: string) => void;
 }
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -78,7 +82,22 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 // ─── Main component ────────────────────────────────────────────────────────
 
-export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, horarios, taxaEntregaTipo = 'nenhuma', taxaEntregaValor = 0, pedidoMinimo = 0, lat = null, lng = null }: ConfiguracoesProps) {
+export function Configuracoes({
+  session,
+  slug,
+  lojaAberta,
+  mensagemFechado,
+  horarios,
+  taxaEntregaTipo = 'nenhuma',
+  taxaEntregaValor = 0,
+  pedidoMinimo = 0,
+  lat = null,
+  lng = null,
+  stripeAtivo: stripeAtivoInicial = false,
+  stripePublicKey: stripePublicKeyInicial = '',
+  pagamentoNaEntrega: pagamentoNaEntregaInicial = true,
+  onToast,
+}: ConfiguracoesProps) {
   // ── Status ──────────────────────────────────────────────────────────────
   const [lojaAbertaState, setLojaAbertaState] = useState(lojaAberta);
   const [togglingLoja, setTogglingLoja] = useState(false);
@@ -106,6 +125,30 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
   // ── Helpers ─────────────────────────────────────────────────────────────
   const [copied, setCopied] = useState(false);
   const catalogUrl = `${window.location.origin}/${slug}`;
+
+  // ── Stripe ───────────────────────────────────────────────────────────────
+  const [stripeAtivo, setStripeAtivo] = useState(stripeAtivoInicial);
+  const [stripePublicKey, setStripePublicKey] = useState(stripePublicKeyInicial ?? '');
+  const [pagamentoNaEntrega, setPagamentoNaEntrega] = useState(pagamentoNaEntregaInicial);
+  const [salvandoStripe, setSalvandoStripe] = useState(false);
+
+  const handleSalvarStripe = async () => {
+    setSalvandoStripe(true);
+    try {
+      await salvarConfigStripe(
+        session.merchant_id,
+        session.token,
+        stripeAtivo,
+        stripePublicKey,
+        pagamentoNaEntrega,
+      );
+      onToast?.('success', 'Configuração Stripe salva!');
+    } catch {
+      onToast?.('error', 'Erro ao salvar configuração Stripe');
+    } finally {
+      setSalvandoStripe(false);
+    }
+  };
 
   const handleToggleLoja = async (aberta: boolean) => {
     setLojaAbertaState(aberta);
@@ -448,7 +491,69 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
         </div>
       </div>
 
-      {/* ── Seção 4: Link do Cardápio ─────────────────────────────────────── */}
+      {/* ── Seção 4: Pagamento Online ─────────────────────────────────────── */}
+      <div style={sectionCard}>
+        <SectionTitle>Pagamento Online</SectionTitle>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Toggle
+              checked={stripeAtivo}
+              onChange={setStripeAtivo}
+              ariaLabel="Ativar pagamento online"
+            />
+            <span
+              className="text-sm font-600"
+              style={{ color: stripeAtivo ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}
+            >
+              {stripeAtivo ? 'Pagamento online ativo' : 'Pagamento online desativado'}
+            </span>
+          </div>
+
+          {stripeAtivo && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Toggle
+                  checked={pagamentoNaEntrega}
+                  onChange={setPagamentoNaEntrega}
+                  ariaLabel="Permitir pagamento na entrega"
+                />
+                <span
+                  className="text-sm font-600"
+                  style={{ color: pagamentoNaEntrega ? 'var(--color-primary)' : 'var(--color-text-secondary)' }}
+                >
+                  {pagamentoNaEntrega ? 'Permite pagar na entrega' : 'Somente pagamento online'}
+                </span>
+              </div>
+
+              <div>
+                <label htmlFor="cfg-stripe-key" className="block text-xs font-600 mb-1.5" style={{ color: 'var(--color-text-secondary)' }}>
+                  Stripe Public Key (pk_test_... ou pk_live_...)
+                </label>
+                <input
+                  id="cfg-stripe-key"
+                  type="text"
+                  value={stripePublicKey}
+                  onChange={(e) => setStripePublicKey(e.target.value)}
+                  placeholder="pk_test_..."
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={handleSalvarStripe}
+            disabled={salvandoStripe}
+            className="px-4 py-2 rounded-xl text-sm font-600 transition-opacity disabled:opacity-40 hover:opacity-85"
+            style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D', cursor: 'pointer' }}
+          >
+            {salvandoStripe ? 'Salvando...' : 'Salvar Pagamento Online'}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Seção 5: Link do Cardápio ─────────────────────────────────────── */}
       <div style={sectionCard}>
         <SectionTitle>Link do Cardápio</SectionTitle>
 
@@ -471,7 +576,7 @@ export function Configuracoes({ session, slug, lojaAberta, mensagemFechado, hora
               className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-600 transition-all hover:opacity-85"
               style={{
                 backgroundColor: copied ? 'rgb(16 185 129 / 0.12)' : 'var(--color-surface-2)',
-                border: `1px solid ${copied ? '#10B981' : 'var(--color-border)'}`,
+                border: copied ? '1px solid #10B981' : '1px solid var(--color-border)',
                 color: copied ? '#10B981' : 'var(--color-text-secondary)',
                 cursor: 'pointer',
               }}

@@ -1,7 +1,10 @@
-import type { CartItem } from '@/types/cart';
-import type { EnderecoCliente } from '@/types/catalog';
-import { BottomSheet } from '@/components/ui/BottomSheet';
-import { formatCurrency, toMoney } from '@/utils/formatCurrency';
+import { useState } from "react";
+import type { CartItem } from "@/types/cart";
+import type { EnderecoCliente } from "@/types/catalog";
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { formatCurrency, toMoney } from "@/utils/formatCurrency";
+import { criarPaymentIntent } from "@/services/api";
+import { StripeCheckout } from "@/components/catalog/StripeCheckout";
 
 interface CartDrawerProps {
   items: CartItem[];
@@ -11,7 +14,7 @@ interface CartDrawerProps {
   onUpdateQuantity: (cartItemId: string, quantidade: number) => void;
   onRemove: (cartItemId: string) => void;
   onEdit?: (cartItem: CartItem) => void;
-  onFinalize: () => void;
+  onFinalize: (paymentStatus?: "online") => void;
   lojaFechada?: boolean;
   taxaEntregaTipo?: string;
   taxaEntregaValor?: number;
@@ -20,6 +23,12 @@ interface CartDrawerProps {
   taxaKmCalculando?: boolean;
   pedidoMinimo?: number;
   endereco?: EnderecoCliente | null;
+  stripeAtivo?: boolean;
+  stripePublicKey?: string | null;
+  pagamentoNaEntrega?: boolean;
+  merchantId?: string;
+  nomeLoja?: string;
+  phone?: string | null;
 }
 
 function CartItemRow({
@@ -33,10 +42,15 @@ function CartItemRow({
   onRemove: (id: string) => void;
   onEdit?: (cartItem: CartItem) => void;
 }) {
-  const opcoesStr = item.opcoes_selecionadas.map((o) => o.opcao_nome).join(', ');
+  const opcoesStr = item.opcoes_selecionadas
+    .map((o) => o.opcao_nome)
+    .join(", ");
 
   return (
-    <div className="flex gap-3 py-3.5" style={{ borderBottom: '1px solid var(--color-border)' }}>
+    <div
+      className="flex gap-3 py-3.5"
+      style={{ borderBottom: "1px solid var(--color-border)" }}
+    >
       {item.foto_url && (
         <img
           src={item.foto_url}
@@ -46,12 +60,27 @@ function CartItemRow({
         />
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-600 leading-snug" style={{ color: 'var(--color-text)' }}>{item.nome}</p>
+        <p
+          className="text-sm font-600 leading-snug"
+          style={{ color: "var(--color-text)" }}
+        >
+          {item.nome}
+        </p>
         {opcoesStr && (
-          <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--color-text-secondary)' }}>{opcoesStr}</p>
+          <p
+            className="text-xs mt-0.5 leading-snug"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            {opcoesStr}
+          </p>
         )}
-        <p className="text-sm font-700 mt-1" style={{ color: 'var(--color-primary)' }}>
-          {formatCurrency(toMoney(item.preco_unitario) * toMoney(item.quantidade))}
+        <p
+          className="text-sm font-700 mt-1"
+          style={{ color: "var(--color-primary)" }}
+        >
+          {formatCurrency(
+            toMoney(item.preco_unitario) * toMoney(item.quantidade)
+          )}
         </p>
       </div>
 
@@ -62,7 +91,7 @@ function CartItemRow({
               onClick={() => onEdit(item)}
               aria-label={`Editar ${item.nome}`}
               className="transition-colors opacity-40 hover:opacity-100"
-              style={{ color: 'var(--color-text-secondary)' }}
+              style={{ color: "var(--color-text-secondary)" }}
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
@@ -73,31 +102,48 @@ function CartItemRow({
             onClick={() => onRemove(item.cart_item_id)}
             aria-label={`Remover ${item.nome}`}
             className="transition-colors opacity-40 hover:opacity-100"
-            style={{ color: '#F87171' }}
+            style={{ color: "#F87171" }}
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
             </svg>
           </button>
         </div>
 
         <div className="flex items-center gap-2 mt-1">
           <button
-            onClick={() => onUpdateQuantity(item.cart_item_id, item.quantidade - 1)}
+            onClick={() =>
+              onUpdateQuantity(item.cart_item_id, item.quantidade - 1)
+            }
             aria-label="Diminuir"
             className="w-7 h-7 rounded-full flex items-center justify-center font-700 text-sm transition-colors"
-            style={{ border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+            style={{
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text)",
+            }}
           >
             −
           </button>
-          <span className="text-sm font-700 w-4 text-center" style={{ color: 'var(--color-text)' }}>
+          <span
+            className="text-sm font-700 w-4 text-center"
+            style={{ color: "var(--color-text)" }}
+          >
             {item.quantidade}
           </span>
           <button
-            onClick={() => onUpdateQuantity(item.cart_item_id, item.quantidade + 1)}
+            onClick={() =>
+              onUpdateQuantity(item.cart_item_id, item.quantidade + 1)
+            }
             aria-label="Aumentar"
             className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-700 hover:opacity-85 transition-opacity"
-            style={{ backgroundColor: 'var(--color-primary)', color: '#0D0D0D' }}
+            style={{
+              backgroundColor: "var(--color-primary)",
+              color: "#0D0D0D",
+            }}
           >
             +
           </button>
@@ -110,10 +156,23 @@ function CartItemRow({
 function EmptyCart() {
   return (
     <div className="flex flex-col items-center py-10 gap-2">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-10 h-10 opacity-20" style={{ color: 'var(--color-text-secondary)' }}>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 5h11M9 19a1 1 0 100 2 1 1 0 000-2zm8 0a1 1 0 100 2 1 1 0 000-2z" />
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        className="w-10 h-10 opacity-20"
+        style={{ color: "var(--color-text-secondary)" }}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 5h11M9 19a1 1 0 100 2 1 1 0 000-2zm8 0a1 1 0 100 2 1 1 0 000-2z"
+        />
       </svg>
-      <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Seu carrinho está vazio</p>
+      <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+        Seu carrinho está vazio
+      </p>
     </div>
   );
 }
@@ -129,9 +188,14 @@ function CartFooter({
   taxaKmCalculando,
   pedidoMinimo,
   endereco,
+  stripeAtivo,
+  pagamentoNaEntrega,
+  merchantId,
+  nomeLoja,
+  phone,
 }: {
   total: number;
-  onFinalize: () => void;
+  onFinalize: (paymentStatus?: "online") => void;
   lojaFechada?: boolean;
   taxaEntregaTipo?: string;
   taxaEntregaValor?: number;
@@ -140,32 +204,96 @@ function CartFooter({
   taxaKmCalculando?: boolean;
   pedidoMinimo?: number;
   endereco?: EnderecoCliente | null;
+  stripeAtivo?: boolean;
+  pagamentoNaEntrega?: boolean;
+  merchantId?: string;
+  nomeLoja?: string;
+  phone?: string | null;
 }) {
-  const isFixa = taxaEntregaTipo === 'fixa' && toMoney(taxaEntregaValor ?? 0) > 0;
-  const isKm = taxaEntregaTipo === 'km';
+  const isFixa =
+    taxaEntregaTipo === "fixa" && toMoney(taxaEntregaValor ?? 0) > 0;
+  const isKm = taxaEntregaTipo === "km";
   const taxaAtiva = isFixa || isKm;
   const taxa = isFixa
     ? toMoney(taxaEntregaValor ?? 0)
     : isKm && taxaKmCalculada != null
-      ? taxaKmCalculada
-      : 0;
+    ? taxaKmCalculada
+    : 0;
   const totalFinal = toMoney(total) + taxa;
   const minimo = toMoney(pedidoMinimo ?? 0);
   const abaixoMinimo = minimo > 0 && toMoney(total) < minimo;
   const disabled = lojaFechada || abaixoMinimo;
 
   const enderecoStr = endereco
-    ? [endereco.endereco_logradouro, endereco.endereco_numero, endereco.cidade].filter(Boolean).join(', ')
+    ? [endereco.endereco_logradouro, endereco.endereco_numero, endereco.cidade]
+        .filter(Boolean)
+        .join(", ")
     : null;
 
+  // ── Stripe states ────────────────────────────────────────────────────────
+  const [showStripe, setShowStripe] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [loadingStripe, setLoadingStripe] = useState(false);
+  const [erroStripe, setErroStripe] = useState<string | null>(null);
+
+  const handlePagarOnline = async () => {
+    if (!merchantId) return;
+    setErroStripe(null);
+    setLoadingStripe(true);
+    try {
+      const result = await criarPaymentIntent(
+        merchantId,
+        totalFinal,
+        phone ?? "",
+        `Pedido ${nomeLoja ?? ""}`
+      );
+      if (result.sucesso && result.client_secret) {
+        setClientSecret(result.client_secret);
+        setShowStripe(true);
+      } else {
+        setErroStripe("Não foi possível iniciar o pagamento. Tente novamente.");
+      }
+    } catch {
+      setErroStripe("Erro ao conectar com o servidor de pagamento.");
+    } finally {
+      setLoadingStripe(false);
+    }
+  };
+
+  const handleStripeSuccess = () => {
+    setShowStripe(false);
+    setClientSecret(null);
+    onFinalize("online");
+  };
+
+  const handleStripeCancel = () => {
+    setShowStripe(false);
+    setClientSecret(null);
+  };
+
   return (
-    <div className="px-4 pb-6 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+    <div
+      className="px-4 pb-6 pt-3"
+      style={{ borderTop: "1px solid var(--color-border)" }}
+    >
       {enderecoStr && (
         <div className="flex gap-1.5 mb-3 items-start">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: 'var(--color-text-muted)' }}>
-            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-3.5 h-3.5 mt-0.5 shrink-0"
+            style={{ color: "var(--color-text-muted)" }}
+          >
+            <path
+              fillRule="evenodd"
+              d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+              clipRule="evenodd"
+            />
           </svg>
-          <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+          <span
+            className="text-xs"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
             Entregando em: {enderecoStr}
           </span>
         </div>
@@ -174,81 +302,220 @@ function CartFooter({
       {taxaAtiva && (
         <div className="space-y-1.5 mb-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Subtotal</span>
-            <span className="text-sm font-600" style={{ color: 'var(--color-text)' }}>{formatCurrency(total)}</span>
+            <span
+              className="text-sm"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Subtotal
+            </span>
+            <span
+              className="text-sm font-600"
+              style={{ color: "var(--color-text)" }}
+            >
+              {formatCurrency(total)}
+            </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>Taxa de entrega</span>
-            <span className="text-sm font-600" style={{ color: 'var(--color-text)' }}>
+            <span
+              className="text-sm"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Taxa de entrega
+            </span>
+            <span
+              className="text-sm font-600"
+              style={{ color: "var(--color-text)" }}
+            >
               {isKm && taxaKmCalculando
-                ? 'Calculando...'
+                ? "Calculando..."
                 : isKm && taxaKmCalculada == null
-                  ? 'Na entrega'
-                  : isKm && distanciaKm != null
-                    ? `${formatCurrency(taxa)} (${Number(distanciaKm).toFixed(1)} km)`
-                    : formatCurrency(taxa)}
+                ? "Na entrega"
+                : isKm && distanciaKm != null
+                ? `${formatCurrency(taxa)} (${Number(distanciaKm).toFixed(
+                    1
+                  )} km)`
+                : formatCurrency(taxa)}
             </span>
           </div>
         </div>
       )}
 
       <div className="flex justify-between items-center mb-3">
-        <span className="font-600" style={{ color: 'var(--color-text-secondary)' }}>Total</span>
-        <span className="font-700 text-lg" style={{ color: 'var(--color-text)' }}>{formatCurrency(totalFinal)}</span>
+        <span
+          className="font-600"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          Total
+        </span>
+        <span
+          className="font-700 text-lg"
+          style={{ color: "var(--color-text)" }}
+        >
+          {formatCurrency(totalFinal)}
+        </span>
       </div>
 
       {abaixoMinimo && (
         <div
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg mb-3 text-xs font-600"
           style={{
-            backgroundColor: 'rgb(245 166 35 / 0.1)',
-            border: '1px solid rgb(245 166 35 / 0.3)',
-            color: 'var(--color-primary)',
+            backgroundColor: "rgb(245 166 35 / 0.1)",
+            border: "1px solid rgb(245 166 35 / 0.3)",
+            color: "var(--color-primary)",
           }}
         >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 shrink-0">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-3.5 h-3.5 shrink-0"
+          >
+            <path
+              fillRule="evenodd"
+              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
           </svg>
           Pedido minimo: {formatCurrency(minimo)}
         </div>
       )}
 
-      <button
-        onClick={onFinalize}
-        disabled={disabled}
-        className="w-full py-3.5 rounded-xl font-700 text-sm flex items-center justify-center gap-2 transition-all"
-        style={{
-          backgroundColor: 'var(--color-whatsapp)',
-          color: '#fff',
-          boxShadow: disabled ? 'none' : '0 4px 16px rgb(37 211 102 / 0.3)',
-          opacity: disabled ? 0.45 : 1,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-        }}
-      >
-        <WhatsAppIcon />
-        Finalizar pelo WhatsApp
-      </button>
+      {/* ── Checkout Stripe inline ─────────────────────────────────────── */}
+      {showStripe && clientSecret ? (
+        <StripeCheckout
+          clientSecret={clientSecret}
+          total={totalFinal}
+          onSuccess={handleStripeSuccess}
+          onCancel={handleStripeCancel}
+        />
+      ) : (
+        <>
+          {erroStripe && (
+            <p
+              className="text-xs mb-3 text-center font-600"
+              style={{ color: "#F87171" }}
+            >
+              {erroStripe}
+            </p>
+          )}
+
+          {/* Cenário 1: stripe desativado — só WhatsApp */}
+          {!stripeAtivo && (
+            <button
+              onClick={() => onFinalize()}
+              disabled={disabled}
+              className="w-full py-3.5 rounded-xl font-700 text-sm flex items-center justify-center gap-2 transition-all"
+              style={{
+                backgroundColor: "var(--color-whatsapp)",
+                color: "#fff",
+                boxShadow: disabled ? "none" : "0 4px 16px rgb(37 211 102 / 0.3)",
+                opacity: disabled ? 0.45 : 1,
+                cursor: disabled ? "not-allowed" : "pointer",
+              }}
+            >
+              <WhatsAppIcon />
+              Finalizar pelo WhatsApp
+            </button>
+          )}
+
+          {/* Cenário 2: stripe ativo + permite na entrega — dois botões */}
+          {stripeAtivo && pagamentoNaEntrega && (
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handlePagarOnline}
+                disabled={loadingStripe || !!disabled}
+                className="w-full py-3.5 rounded-xl font-700 text-sm flex items-center justify-center gap-2 transition-all"
+                style={{
+                  backgroundColor: "var(--color-primary)",
+                  color: "#0D0D0D",
+                  opacity: loadingStripe || disabled ? 0.45 : 1,
+                  cursor: loadingStripe || disabled ? "not-allowed" : "pointer",
+                  boxShadow: disabled ? "none" : "0 4px 16px rgb(245 166 35 / 0.3)",
+                }}
+              >
+                {loadingStripe ? "Aguarde..." : "Pagar agora"}
+              </button>
+              <button
+                onClick={() => onFinalize()}
+                disabled={!!disabled}
+                className="w-full py-3.5 rounded-xl font-700 text-sm flex items-center justify-center gap-2 transition-all"
+                style={{
+                  backgroundColor: "var(--color-whatsapp)",
+                  color: "#fff",
+                  boxShadow: disabled ? "none" : "0 4px 16px rgb(37 211 102 / 0.3)",
+                  opacity: disabled ? 0.45 : 1,
+                  cursor: disabled ? "not-allowed" : "pointer",
+                }}
+              >
+                <WhatsAppIcon />
+                Finalizar pelo WhatsApp
+              </button>
+            </div>
+          )}
+
+          {/* Cenário 3: stripe ativo + somente online — só Pagar agora */}
+          {stripeAtivo && !pagamentoNaEntrega && (
+            <button
+              onClick={handlePagarOnline}
+              disabled={loadingStripe || !!disabled}
+              className="w-full py-3.5 rounded-xl font-700 text-sm flex items-center justify-center gap-2 transition-all"
+              style={{
+                backgroundColor: "var(--color-primary)",
+                color: "#0D0D0D",
+                opacity: loadingStripe || disabled ? 0.45 : 1,
+                cursor: loadingStripe || disabled ? "not-allowed" : "pointer",
+                boxShadow: disabled ? "none" : "0 4px 16px rgb(245 166 35 / 0.3)",
+              }}
+            >
+              {loadingStripe ? "Aguarde..." : "Pagar agora"}
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
 /** Sidebar — desktop */
 export function CartSidebar({
-  items, total, onUpdateQuantity, onRemove, onEdit, onFinalize, lojaFechada,
-  taxaEntregaTipo, taxaEntregaValor, taxaKmCalculada, distanciaKm, taxaKmCalculando,
-  pedidoMinimo, endereco,
-}: Omit<CartDrawerProps, 'open' | 'onClose'>) {
+  items,
+  total,
+  onUpdateQuantity,
+  onRemove,
+  onEdit,
+  onFinalize,
+  lojaFechada,
+  taxaEntregaTipo,
+  taxaEntregaValor,
+  taxaKmCalculada,
+  distanciaKm,
+  taxaKmCalculando,
+  pedidoMinimo,
+  endereco,
+  stripeAtivo,
+  pagamentoNaEntrega,
+  merchantId,
+  nomeLoja,
+  phone,
+}: Omit<CartDrawerProps, "open" | "onClose">) {
   return (
     <aside
       className="hidden md:flex w-80 shrink-0 flex-col rounded-2xl h-fit sticky top-4"
       style={{
-        backgroundColor: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        boxShadow: 'var(--shadow-sm)',
+        backgroundColor: "var(--color-surface)",
+        border: "1px solid var(--color-border)",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
-      <div className="p-4" style={{ borderBottom: '1px solid var(--color-border)' }}>
-        <h2 className="font-700 text-base" style={{ color: 'var(--color-text)' }}>Seu pedido</h2>
+      <div
+        className="p-4"
+        style={{ borderBottom: "1px solid var(--color-border)" }}
+      >
+        <h2
+          className="font-700 text-base"
+          style={{ color: "var(--color-text)" }}
+        >
+          Seu pedido
+        </h2>
       </div>
 
       {items.length === 0 ? (
@@ -257,7 +524,13 @@ export function CartSidebar({
         <>
           <div className="flex-1 overflow-y-auto px-4 max-h-[60vh]">
             {items.map((item) => (
-              <CartItemRow key={item.cart_item_id} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} onEdit={onEdit} />
+              <CartItemRow
+                key={item.cart_item_id}
+                item={item}
+                onUpdateQuantity={onUpdateQuantity}
+                onRemove={onRemove}
+                onEdit={onEdit}
+              />
             ))}
           </div>
           <CartFooter
@@ -271,6 +544,11 @@ export function CartSidebar({
             taxaKmCalculando={taxaKmCalculando}
             pedidoMinimo={pedidoMinimo}
             endereco={endereco}
+            stripeAtivo={stripeAtivo}
+            pagamentoNaEntrega={pagamentoNaEntrega}
+            merchantId={merchantId}
+            nomeLoja={nomeLoja}
+            phone={phone}
           />
         </>
       )}
@@ -280,11 +558,32 @@ export function CartSidebar({
 
 /** Bottom sheet — mobile */
 export function CartDrawer({
-  items, total, open, onClose, onUpdateQuantity, onRemove, onEdit, onFinalize, lojaFechada,
-  taxaEntregaTipo, taxaEntregaValor, taxaKmCalculada, distanciaKm, taxaKmCalculando,
-  pedidoMinimo, endereco,
+  items,
+  total,
+  open,
+  onClose,
+  onUpdateQuantity,
+  onRemove,
+  onEdit,
+  onFinalize,
+  lojaFechada,
+  taxaEntregaTipo,
+  taxaEntregaValor,
+  taxaKmCalculada,
+  distanciaKm,
+  taxaKmCalculando,
+  pedidoMinimo,
+  endereco,
+  stripeAtivo,
+  pagamentoNaEntrega,
+  merchantId,
+  nomeLoja,
+  phone,
 }: CartDrawerProps) {
-  const handleFinalize = () => { onFinalize(); if (!lojaFechada) onClose(); };
+  const handleFinalize = (paymentStatus?: "online") => {
+    onFinalize(paymentStatus);
+    if (!lojaFechada || paymentStatus === "online") onClose();
+  };
 
   return (
     <BottomSheet open={open} onClose={onClose} title="Seu pedido">
@@ -293,7 +592,13 @@ export function CartDrawer({
           <EmptyCart />
         ) : (
           items.map((item) => (
-            <CartItemRow key={item.cart_item_id} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} onEdit={onEdit} />
+            <CartItemRow
+              key={item.cart_item_id}
+              item={item}
+              onUpdateQuantity={onUpdateQuantity}
+              onRemove={onRemove}
+              onEdit={onEdit}
+            />
           ))
         )}
       </div>
@@ -309,6 +614,11 @@ export function CartDrawer({
           taxaKmCalculando={taxaKmCalculando}
           pedidoMinimo={pedidoMinimo}
           endereco={endereco}
+          stripeAtivo={stripeAtivo}
+          pagamentoNaEntrega={pagamentoNaEntrega}
+          merchantId={merchantId}
+          nomeLoja={nomeLoja}
+          phone={phone}
         />
       )}
     </BottomSheet>

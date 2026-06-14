@@ -51,13 +51,17 @@ export interface Merchant {
   lat: number | null;
   lng: number | null;
   horarios?: {
-    segunda:  { aberto: boolean; abertura: string; fechamento: string };
-    terca:    { aberto: boolean; abertura: string; fechamento: string };
-    quarta:   { aberto: boolean; abertura: string; fechamento: string };
-    quinta:   { aberto: boolean; abertura: string; fechamento: string };
-    sexta:    { aberto: boolean; abertura: string; fechamento: string };
-    sabado:   { aberto: boolean; abertura: string; fechamento: string };
-    domingo:  { aberto: boolean; abertura: string; fechamento: string };
+    segunda: { aberto: boolean; abertura: string; fechamento: string };
+    terca: { aberto: boolean; abertura: string; fechamento: string };
+    quarta: { aberto: boolean; abertura: string; fechamento: string };
+    quinta: { aberto: boolean; abertura: string; fechamento: string };
+    sexta: { aberto: boolean; abertura: string; fechamento: string };
+    sabado: { aberto: boolean; abertura: string; fechamento: string };
+    domingo: { aberto: boolean; abertura: string; fechamento: string };
   };
   categorias: Categoria[];
+  stripe_ativo: boolean;
+  stripe_public_key: string | null;
+  pagamento_online: boolean;
+  pagamento_na_entrega: boolean;
 }

@@ -19,6 +19,7 @@ export function formatWhatsappMessage(
   subtotal: number,
   delivery?: DeliveryInfo,
   resgateInfo?: ResgateInfo | null,
+  paymentStatus?: 'online' | null,
 ): string {
   const isFixa = delivery?.taxaEntregaTipo === 'fixa' && toMoney(delivery?.taxaEntregaValor ?? 0) > 0;
   const isKm = delivery?.taxaEntregaTipo === 'km' && (delivery?.taxaKmCalculada ?? 0) > 0;
@@ -58,6 +59,11 @@ export function formatWhatsappMessage(
   if (resgateInfo) {
     partes.push('');
     partes.push(`*Resgate Club VIP: ${resgateInfo.brinde}*`);
+  }
+
+  if (paymentStatus === 'online') {
+    partes.push('');
+    partes.push('*Pagamento: Confirmado online via cartao*');
   }
 
   partes.push('');

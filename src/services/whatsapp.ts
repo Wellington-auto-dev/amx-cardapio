@@ -24,6 +24,7 @@ export function abrirWhatsApp(
   subtotal: number,
   delivery?: DeliveryInfo,
   resgateInfo?: ResgateInfo | null,
+  paymentStatus?: 'online' | null,
 ): void {
   const linhas = items.map((item) => {
     const opcoesStr = item.opcoes_selecionadas
@@ -33,7 +34,7 @@ export function abrirWhatsApp(
     return `- ${item.nome}${descricao} x${item.quantidade} -- ${formatCurrency(toMoney(item.preco_unitario) * toMoney(item.quantidade))}`;
   });
 
-  const mensagem = formatWhatsappMessage(linhas, subtotal, delivery, resgateInfo);
+  const mensagem = formatWhatsappMessage(linhas, subtotal, delivery, resgateInfo, paymentStatus);
   const url = `${WA_BASE}/${whatsappNumero}?text=${encodeURIComponent(mensagem)}`;
   window.open(url, '_blank');
 }

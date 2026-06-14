@@ -582,6 +582,10 @@ export default function AdminPage() {
                         pedidoMinimo={merchant.pedido_minimo}
                         lat={merchant.lat}
                         lng={merchant.lng}
+                        stripeAtivo={merchant.stripe_ativo}
+                        stripePublicKey={merchant.stripe_public_key}
+                        pagamentoNaEntrega={merchant.pagamento_na_entrega}
+                        onToast={toast}
                       />
                     ) : (
                       <div

@@ -213,9 +213,9 @@ export default function CatalogPage() {
     }
   };
 
-  const handleFinalize = () => {
+  const handleFinalize = (paymentStatus?: 'online') => {
     if (!merchant) return;
-    if (merchant.loja_aberta === false) {
+    if (merchant.loja_aberta === false && paymentStatus !== 'online') {
       addToast('error', merchant.mensagem_fechado);
       return;
     }
@@ -228,7 +228,7 @@ export default function CatalogPage() {
       taxaEntregaValor: merchant.taxa_entrega_valor ?? 0,
       taxaKmCalculada: taxaKm.taxaCalculada,
       distanciaKm: taxaKm.distanciaKm,
-    }, resgateInfo);
+    }, resgateInfo, paymentStatus ?? null);
     cart.clearCart();
   };
 
@@ -485,6 +485,12 @@ export default function CatalogPage() {
           taxaKmCalculando={taxaKm.calculando}
           pedidoMinimo={merchant?.pedido_minimo}
           endereco={clubVip.endereco}
+          stripeAtivo={merchant?.stripe_ativo}
+          stripePublicKey={merchant?.stripe_public_key}
+          pagamentoNaEntrega={merchant?.pagamento_na_entrega}
+          merchantId={merchant?.merchant_id}
+          nomeLoja={merchant?.nome_loja}
+          phone={phone}
         />
       </div>
 
@@ -513,6 +519,12 @@ export default function CatalogPage() {
         taxaKmCalculando={taxaKm.calculando}
         pedidoMinimo={merchant?.pedido_minimo}
         endereco={clubVip.endereco}
+        stripeAtivo={merchant?.stripe_ativo}
+        stripePublicKey={merchant?.stripe_public_key}
+        pagamentoNaEntrega={merchant?.pagamento_na_entrega}
+        merchantId={merchant?.merchant_id}
+        nomeLoja={merchant?.nome_loja}
+        phone={phone}
       />
 
       <ItemModal

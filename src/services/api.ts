@@ -1,8 +1,16 @@
-import axios from 'axios';
-import type { Merchant, EnderecoCliente } from '@/types/catalog';
-import type { ItemManualPayload, ClubVipConfig, ClubVipNivel, ClubVipSaldo, ClubVipResgate, CategoriaOrdem, GrupoEditPayload } from '@/types/admin';
-import type { ParsedPlanilha } from '@/services/excel';
-import { montarPayloadPlanilha } from '@/services/excel';
+import axios from "axios";
+import type { Merchant, EnderecoCliente } from "@/types/catalog";
+import type {
+  ItemManualPayload,
+  ClubVipConfig,
+  ClubVipNivel,
+  ClubVipSaldo,
+  ClubVipResgate,
+  CategoriaOrdem,
+  GrupoEditPayload,
+} from "@/types/admin";
+import type { ParsedPlanilha } from "@/services/excel";
+import { montarPayloadPlanilha } from "@/services/excel";
 
 const BASE_URL = import.meta.env.VITE_N8N_BASE_URL as string;
 
@@ -11,7 +19,7 @@ const api = axios.create({ baseURL: BASE_URL });
 // ─── Cardápio público ──────────────────────────────────────────────────────
 
 export async function fetchCardapio(slug: string): Promise<Merchant> {
-  const { data } = await api.get<Merchant>('/amx-cardapio-buscar', {
+  const { data } = await api.get<Merchant>("/amx-cardapio-buscar", {
     params: { merchant_slug: slug },
   });
   return data;
@@ -21,9 +29,9 @@ export async function fetchCardapio(slug: string): Promise<Merchant> {
 
 export async function validarToken(
   merchantSlug: string,
-  token: string,
+  token: string
 ): Promise<{ valido: boolean; merchant_id: string }> {
-  const { data } = await api.post('/amx-cardapio-validar-token', {
+  const { data } = await api.post("/amx-cardapio-validar-token", {
     merchant_slug: merchantSlug,
     token,
   });
@@ -34,9 +42,9 @@ export async function validarToken(
 
 export async function importarMarketplace(
   merchantId: string,
-  token: string,
+  token: string
 ): Promise<{ sucesso: boolean; mensagem: string }> {
-  const { data } = await api.post('/amx-cardapio-importar-marketplace', {
+  const { data } = await api.post("/amx-cardapio-importar-marketplace", {
     merchant_id: merchantId,
     token,
   });
@@ -48,13 +56,13 @@ export async function importarMarketplace(
 export async function uploadPlanilha(
   merchantId: string,
   token: string,
-  parsed: ParsedPlanilha,
+  parsed: ParsedPlanilha
 ): Promise<{ sucesso: boolean; mensagem: string }> {
   const planilha = montarPayloadPlanilha(parsed);
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'upload_planilha',
+    acao: "upload_planilha",
     planilha,
   });
   return data;
@@ -63,12 +71,12 @@ export async function uploadPlanilha(
 // ─── Item manual ───────────────────────────────────────────────────────────
 
 export async function inserirItemManual(
-  payload: ItemManualPayload,
+  payload: ItemManualPayload
 ): Promise<{ sucesso: boolean; mensagem: string }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: payload.merchant_id,
     token: payload.token,
-    acao: 'item_manual',
+    acao: "item_manual",
     categoria: payload.categoria,
     nome: payload.nome,
     descricao: payload.descricao,
@@ -86,12 +94,12 @@ export async function atualizarDisponibilidade(
   merchantId: string,
   token: string,
   itemId: string,
-  disponivel: boolean,
+  disponivel: boolean
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'disponibilidade',
+    acao: "disponibilidade",
     item_id: itemId,
     disponivel,
   });
@@ -103,12 +111,12 @@ export async function atualizarDisponibilidade(
 export async function deletarItem(
   merchantId: string,
   token: string,
-  itemId: string,
+  itemId: string
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'deletar_item',
+    acao: "deletar_item",
     item_id: itemId,
   });
   return data;
@@ -128,12 +136,12 @@ export async function editarItem(
     foto_url?: string;
     disponivel?: boolean;
     grupos?: GrupoEditPayload[];
-  },
+  }
 ): Promise<{ sucesso: boolean; mensagem: string }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'editar_item',
+    acao: "editar_item",
     item_id: itemId,
     ...campos,
   });
@@ -145,12 +153,12 @@ export async function editarItem(
 export async function atualizarLogo(
   merchantId: string,
   token: string,
-  logoUrl: string,
+  logoUrl: string
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'atualizar_logo',
+    acao: "atualizar_logo",
     logo_url: logoUrl,
   });
   return data;
@@ -160,7 +168,7 @@ export async function atualizarLogo(
 
 export async function fetchDashboard(
   merchantId: string,
-  token: string,
+  token: string
 ): Promise<{
   total_clientes: number;
   clientes_capturados: number;
@@ -171,7 +179,7 @@ export async function fetchDashboard(
   total_itens: number;
   itens_ativos: number;
 }> {
-  const { data } = await api.post('/amx-cardapio-dashboard', {
+  const { data } = await api.post("/amx-cardapio-dashboard", {
     merchant_id: merchantId,
     token,
   });
@@ -182,7 +190,7 @@ export async function fetchDashboard(
 
 export async function fetchCarteira(
   merchantId: string,
-  token: string,
+  token: string
 ): Promise<{
   indicadores: {
     total_carteira: number;
@@ -223,7 +231,7 @@ export async function fetchCarteira(
     total: number;
   }[];
 }> {
-  const { data } = await api.post('/amx-cardapio-carteira', {
+  const { data } = await api.post("/amx-cardapio-carteira", {
     merchant_id: merchantId,
     token,
   });
@@ -235,12 +243,12 @@ export async function fetchCarteira(
 export async function toggleLojaAberta(
   merchantId: string,
   token: string,
-  lojaAberta: boolean,
+  lojaAberta: boolean
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'toggle_loja',
+    acao: "toggle_loja",
     loja_aberta: lojaAberta,
   });
   return data;
@@ -249,12 +257,12 @@ export async function toggleLojaAberta(
 export async function atualizarMensagemFechado(
   merchantId: string,
   token: string,
-  mensagemFechado: string,
+  mensagemFechado: string
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'atualizar_mensagem_fechado',
+    acao: "atualizar_mensagem_fechado",
     mensagem_fechado: mensagemFechado,
   });
   return data;
@@ -265,12 +273,15 @@ export async function atualizarMensagemFechado(
 export async function atualizarHorarios(
   merchantId: string,
   token: string,
-  horarios: Record<string, { aberto: boolean; abertura: string; fechamento: string }>,
+  horarios: Record<
+    string,
+    { aberto: boolean; abertura: string; fechamento: string }
+  >
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'atualizar_horarios',
+    acao: "atualizar_horarios",
     horarios,
   });
   return data;
@@ -279,12 +290,12 @@ export async function atualizarHorarios(
 export async function reordenarItens(
   merchantId: string,
   token: string,
-  itens: { id: string; ordem: number }[],
+  itens: { id: string; ordem: number }[]
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'reordenar_itens',
+    acao: "reordenar_itens",
     itens,
   });
   return data;
@@ -294,7 +305,7 @@ export async function reordenarItens(
 
 export async function fetchPedidos(
   merchantId: string,
-  token: string,
+  token: string
 ): Promise<{
   indicadores: {
     total_pedidos: number;
@@ -328,7 +339,7 @@ export async function fetchPedidos(
     }[];
   }[];
 }> {
-  const { data } = await api.post('/amx-cardapio-pedidos', {
+  const { data } = await api.post("/amx-cardapio-pedidos", {
     merchant_id: merchantId,
     token,
   });
@@ -351,7 +362,7 @@ export async function validarOperador(clerkUserId: string): Promise<{
   }[];
   erro?: string;
 }> {
-  const { data } = await api.post('/amx-operador-lojas', {
+  const { data } = await api.post("/amx-operador-lojas", {
     clerk_user_id: clerkUserId,
   });
   return data;
@@ -361,7 +372,7 @@ export async function validarOperador(clerkUserId: string): Promise<{
 
 export async function buscarClubVipDashboard(
   merchantId: string,
-  token: string,
+  token: string
 ): Promise<{
   sucesso: boolean;
   config: ClubVipConfig;
@@ -369,7 +380,7 @@ export async function buscarClubVipDashboard(
   saldos: ClubVipSaldo[];
   resgates: ClubVipResgate[];
 }> {
-  const { data } = await api.post('/amx-clubvip-dashboard', {
+  const { data } = await api.post("/amx-clubvip-dashboard", {
     merchant_id: merchantId,
     token,
   });
@@ -380,9 +391,14 @@ export async function configurarClubVip(
   merchantId: string,
   token: string,
   acao: string,
-  payload: object,
-): Promise<{ sucesso: boolean; mensagem?: string; nivel?: ClubVipNivel; erro?: string }> {
-  const { data } = await api.post('/amx-clubvip-configurar', {
+  payload: object
+): Promise<{
+  sucesso: boolean;
+  mensagem?: string;
+  nivel?: ClubVipNivel;
+  erro?: string;
+}> {
+  const { data } = await api.post("/amx-clubvip-configurar", {
     merchant_id: merchantId,
     token,
     acao,
@@ -395,9 +411,9 @@ export async function registrarIntencaoClubVip(
   phone: string,
   merchantId: string,
   nivelId: string | null,
-  decisao: 'resgatar' | 'acumular',
+  decisao: "resgatar" | "acumular"
 ): Promise<{ sucesso: true }> {
-  const { data } = await api.post('/amx-clubvip-intencao', {
+  const { data } = await api.post("/amx-clubvip-intencao", {
     phone,
     merchant_id: merchantId,
     nivel_id: nivelId,
@@ -408,7 +424,7 @@ export async function registrarIntencaoClubVip(
 
 export async function buscarSaldoClubVip(
   merchantId: string,
-  phone: string,
+  phone: string
 ): Promise<{
   sucesso: boolean;
   club_ativo: boolean;
@@ -420,7 +436,7 @@ export async function buscarSaldoClubVip(
   nivel_resgatavel?: { id: string; meta_pontos: number; brinde: string } | null;
   nivel_maximo_atingido?: boolean;
 }> {
-  const { data } = await api.post('/amx-clubvip-saldo', {
+  const { data } = await api.post("/amx-clubvip-saldo", {
     merchant_id: merchantId,
     phone,
   });
@@ -432,12 +448,15 @@ export async function buscarSaldoClubVip(
 export async function geocodificarEndereco(
   merchantId: string,
   token: string,
-  endereco: string,
-): Promise<{ sucesso: true; lat: number; lng: number; endereco_formatado: string } | { sucesso: false; erro: string }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  endereco: string
+): Promise<
+  | { sucesso: true; lat: number; lng: number; endereco_formatado: string }
+  | { sucesso: false; erro: string }
+> {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'geocodificar_endereco',
+    acao: "geocodificar_endereco",
     endereco,
   });
   return data;
@@ -447,9 +466,12 @@ export async function calcularDistancia(
   merchantId: string,
   latOrigem: number,
   lngOrigem: number,
-  enderecoDestino: string,
-): Promise<{ sucesso: true; distancia_km: number; distancia_texto: string } | { sucesso: false; erro: string }> {
-  const { data } = await api.post('/amx-calcular-distancia', {
+  enderecoDestino: string
+): Promise<
+  | { sucesso: true; distancia_km: number; distancia_texto: string }
+  | { sucesso: false; erro: string }
+> {
+  const { data } = await api.post("/amx-calcular-distancia", {
     merchant_id: merchantId,
     lat_origem: latOrigem,
     lng_origem: lngOrigem,
@@ -469,12 +491,12 @@ export async function salvarTaxaEntrega(
     pedido_minimo: number;
     lat: number | null;
     lng: number | null;
-  },
+  }
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'salvar_taxa_entrega',
+    acao: "salvar_taxa_entrega",
     ...payload,
   });
   return data;
@@ -485,12 +507,12 @@ export async function salvarTaxaEntrega(
 // TODO (n8n M3): acao 'buscar_categorias' → SELECT nome, ordem FROM menu_categorias WHERE merchant_id ORDER BY ordem ASC
 export async function buscarCategorias(
   merchantId: string,
-  token: string,
+  token: string
 ): Promise<{ sucesso: boolean; categorias: CategoriaOrdem[] }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'buscar_categorias',
+    acao: "buscar_categorias",
   });
   return data;
 }
@@ -499,12 +521,12 @@ export async function buscarCategorias(
 export async function reordenarCategorias(
   merchantId: string,
   token: string,
-  categorias: CategoriaOrdem[],
+  categorias: CategoriaOrdem[]
 ): Promise<{ sucesso: boolean }> {
-  const { data } = await api.post('/amx-cardapio-admin', {
+  const { data } = await api.post("/amx-cardapio-admin", {
     merchant_id: merchantId,
     token,
-    acao: 'reordenar_categorias',
+    acao: "reordenar_categorias",
     categorias,
   });
   return data;
@@ -514,7 +536,7 @@ export async function reordenarCategorias(
 
 export async function fetchChat(
   merchantId: string,
-  token: string,
+  token: string
 ): Promise<{
   conversas: {
     session_id: string;
@@ -530,9 +552,49 @@ export async function fetchChat(
     }[];
   }[];
 }> {
-  const { data } = await api.post('/amx-cardapio-chat', {
+  const { data } = await api.post("/amx-cardapio-chat", {
     merchant_id: merchantId,
     token,
+  });
+  return data;
+}
+
+// Stripe — criar Payment Intent via M16
+export async function criarPaymentIntent(
+  merchantId: string,
+  total: number,
+  phone: string,
+  descricao: string
+): Promise<{
+  sucesso: boolean;
+  client_secret?: string;
+  payment_intent_id?: string;
+  erro?: string;
+}> {
+  const { data } = await api.post("/amx-stripe-payment-intent", {
+    merchant_id: merchantId,
+    total,
+    phone,
+    descricao,
+  });
+  return data;
+}
+
+// Stripe — salvar configuracao via M3
+export async function salvarConfigStripe(
+  merchantId: string,
+  token: string,
+  stripeAtivo: boolean,
+  stripePublicKey: string,
+  pagamentoNaEntrega: boolean
+): Promise<{ sucesso: boolean }> {
+  const { data } = await api.post("/amx-cardapio-admin", {
+    merchant_id: merchantId,
+    token,
+    acao: "salvar_stripe",
+    stripe_ativo: stripeAtivo,
+    stripe_public_key: stripePublicKey,
+    pagamento_na_entrega: pagamentoNaEntrega,
   });
   return data;
 }
