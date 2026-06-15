@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -30,6 +30,20 @@ function CheckoutForm({
   const [erro, setErro] = useState<string | null>(null);
   const [pagamentoConfirmado, setPagamentoConfirmado] = useState(false);
   const [confirmedId, setConfirmedId] = useState("");
+
+  // Trava o scroll do body enquanto o modal está aberto
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // Fecha com Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onCancel]);
 
   const handleSubmit = async () => {
     if (!stripe || !elements) return;
@@ -121,94 +135,160 @@ function CheckoutForm({
     );
   }
 
-  // ── Formulário de pagamento ────────────────────────────────────────────────
+  // ── Formulário de pagamento (bottom sheet no mobile) ──────────────────────
   return (
-    <Modal open={true} onClose={onCancel} maxWidth={480} fullscreenMobile={false}>
-      {/* Header */}
-      <div
-        className="flex items-center justify-between px-5 py-4"
-        style={{ borderBottom: "1px solid var(--color-border)" }}
-      >
-        <span className="text-base font-700" style={{ color: "var(--color-text)" }}>
-          Pagamento Online
-        </span>
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-700" style={{ color: "var(--color-primary)" }}>
-            R$ {total.toFixed(2).replace(".", ",")}
+    <>
+      <style>{`
+        .sck-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 50;
+          background: rgba(0, 0, 0, 0.7);
+        }
+        .sck-sheet {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 51;
+          width: calc(100% - 32px);
+          max-width: 480px;
+          max-height: 90vh;
+          overflow-y: auto;
+          border-radius: 16px;
+          background-color: var(--color-surface);
+          display: flex;
+          flex-direction: column;
+        }
+        .sck-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 20px;
+          border-bottom: 1px solid var(--color-border);
+          flex-shrink: 0;
+        }
+        .sck-body {
+          flex: 1;
+          overflow-y: auto;
+          padding: 20px;
+          -webkit-overflow-scrolling: touch;
+        }
+        .sck-payment-element {
+          min-height: 200px;
+        }
+        .sck-footer {
+          padding: 16px 20px;
+          border-top: 1px solid var(--color-border);
+          background-color: var(--color-surface);
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          flex-shrink: 0;
+        }
+        @media (max-width: 767px) {
+          .sck-sheet {
+            top: auto;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            transform: none;
+            width: 100%;
+            max-width: 100%;
+            border-radius: 16px 16px 0 0;
+            min-height: 70vh;
+            max-height: 95vh;
+          }
+          .sck-footer {
+            padding-bottom: 80px;
+          }
+        }
+      `}</style>
+
+      {/* Overlay — clique fecha */}
+      <div className="sck-overlay" onClick={onCancel} />
+
+      {/* Sheet / card */}
+      <div className="sck-sheet">
+        {/* Header */}
+        <div className="sck-header">
+          <span className="text-base font-700" style={{ color: "var(--color-text)" }}>
+            Pagamento Online
           </span>
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-700" style={{ color: "var(--color-primary)" }}>
+              R$ {total.toFixed(2).replace(".", ",")}
+            </span>
+            <button
+              onClick={onCancel}
+              aria-label="Fechar"
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+              style={{
+                backgroundColor: "var(--color-surface-2)",
+                color: "var(--color-text-muted)",
+              }}
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="sck-body">
+          <div className="sck-payment-element">
+            <PaymentElement />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sck-footer">
+          {erro && (
+            <p
+              className="text-sm text-center"
+              style={{ color: "var(--color-error, #ef4444)", margin: 0 }}
+            >
+              {erro}
+            </p>
+          )}
+
           <button
-            onClick={onCancel}
-            aria-label="Fechar"
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            onClick={handleSubmit}
+            disabled={loading || !stripe}
+            className="w-full py-3.5 rounded-xl text-sm font-700 transition-all active:scale-[0.98]"
             style={{
-              backgroundColor: "var(--color-surface-2)",
-              color: "var(--color-text-muted)",
+              backgroundColor:
+                loading || !stripe ? "var(--color-surface-2)" : "var(--color-primary)",
+              color: loading || !stripe ? "var(--color-text-muted)" : "#0D0D0D",
+              cursor: loading || !stripe ? "not-allowed" : "pointer",
+              boxShadow:
+                !loading && stripe ? "0 4px 16px rgb(245 166 35 / 0.35)" : "none",
             }}
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            {loading ? "Processando..." : "Confirmar pagamento"}
+          </button>
+
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="w-full py-3 rounded-xl text-sm transition-colors"
+            style={{
+              background: "transparent",
+              color: "var(--color-text-muted)",
+              border: "1px solid var(--color-border)",
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+          >
+            Cancelar
           </button>
         </div>
       </div>
-
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto px-5 py-5">
-        <PaymentElement />
-      </div>
-
-      {/* Footer */}
-      <div
-        className="px-5 py-4 flex flex-col gap-3"
-        style={{
-          borderTop: "1px solid var(--color-border)",
-          backgroundColor: "var(--color-surface)",
-        }}
-      >
-        {erro && (
-          <p
-            className="text-sm text-center"
-            style={{ color: "var(--color-error, #ef4444)", margin: 0 }}
-          >
-            {erro}
-          </p>
-        )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !stripe}
-          className="w-full py-3.5 rounded-xl text-sm font-700 transition-all active:scale-[0.98]"
-          style={{
-            backgroundColor:
-              loading || !stripe ? "var(--color-surface-2)" : "var(--color-primary)",
-            color: loading || !stripe ? "var(--color-text-muted)" : "#0D0D0D",
-            cursor: loading || !stripe ? "not-allowed" : "pointer",
-            boxShadow:
-              !loading && stripe ? "0 4px 16px rgb(245 166 35 / 0.35)" : "none",
-          }}
-        >
-          {loading ? "Processando..." : "Confirmar pagamento"}
-        </button>
-
-        <button
-          onClick={onCancel}
-          disabled={loading}
-          className="w-full py-3 rounded-xl text-sm transition-colors"
-          style={{
-            background: "transparent",
-            color: "var(--color-text-muted)",
-            border: "1px solid var(--color-border)",
-            cursor: loading ? "not-allowed" : "pointer",
-          }}
-        >
-          Cancelar
-        </button>
-      </div>
-    </Modal>
+    </>
   );
 }
 
