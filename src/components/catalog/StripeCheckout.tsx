@@ -33,23 +33,20 @@ function CheckoutForm({
     setLoading(true);
     setErro(null);
 
-    console.log("[Stripe] iniciando confirm");
-
     try {
-      const confirmResult = await checkout.confirm();
-
-      console.log("[Stripe] resultado:", confirmResult);
+      const confirmResult = await checkout.confirm({
+        returnUrl: window.location.href,
+      });
 
       if (confirmResult.type === "error") {
-        console.log("[Stripe] erro:", confirmResult.error);
         setErro(confirmResult.error.message ?? "Erro ao processar pagamento");
         return;
       }
 
       onSuccess(confirmResult.session.id);
     } catch (err) {
-      console.log("[Stripe] erro:", err);
       setErro("Erro inesperado ao processar pagamento");
+      console.error("[Stripe]", err);
     } finally {
       setLoading(false);
     }
