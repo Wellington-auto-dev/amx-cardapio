@@ -34,9 +34,7 @@ function CheckoutForm({
     setErro(null);
 
     try {
-      const confirmResult = await checkout.confirm({
-        returnUrl: window.location.href,
-      });
+      const confirmResult = await checkout.confirm();
 
       if (confirmResult.type === "error") {
         setErro(confirmResult.error.message ?? "Erro ao processar pagamento");
