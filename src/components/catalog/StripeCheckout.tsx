@@ -23,6 +23,7 @@ function CheckoutForm({
 }: Omit<StripeCheckoutProps, "clientSecret">) {
   const result = useCheckout();
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
   const [erro, setErro] = useState<string | null>(null);
 
   const checkout = result.type === "success" ? result.checkout : null;
@@ -30,11 +31,17 @@ function CheckoutForm({
 
   const handleSubmit = async () => {
     if (!checkout) return;
+
+    if (!email.trim()) {
+      setErro("Informe seu e-mail para continuar");
+      return;
+    }
+
     setLoading(true);
     setErro(null);
 
     try {
-      const confirmResult = await checkout.confirm();
+      const confirmResult = await checkout.confirm({ email });
 
       if (confirmResult.type === "error") {
         setErro(confirmResult.error.message ?? "Erro ao processar pagamento");
@@ -85,7 +92,32 @@ function CheckoutForm({
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-5 py-5">
+      <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4">
+        {/* Campo e-mail */}
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="stripe-email"
+            className="text-sm font-600"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
+            Seu e-mail
+          </label>
+          <input
+            id="stripe-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="seu@email.com"
+            autoComplete="email"
+            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-colors"
+            style={{
+              backgroundColor: "var(--color-surface-2)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text)",
+            }}
+          />
+        </div>
+
         <PaymentElement />
       </div>
 
