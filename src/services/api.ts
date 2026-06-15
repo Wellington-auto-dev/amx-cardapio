@@ -571,13 +571,13 @@ export async function criarPaymentIntent(
   payment_intent_id?: string;
   erro?: string;
 }> {
-  const { data } = await api.post("/amx-stripe-payment-intent", {
-    merchant_id: merchantId,
-    total,
-    phone,
-    descricao,
+  const baseUrl = import.meta.env.VITE_N8N_BASE_URL as string;
+  const response = await fetch(`${baseUrl}/amx-stripe-payment-intent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ merchant_id: merchantId, total, phone, descricao }),
   });
-  return data;
+  return response.json();
 }
 
 // Stripe — salvar configuracao via M3
