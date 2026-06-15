@@ -37,10 +37,16 @@ export function abrirWhatsApp(
   const mensagem = formatWhatsappMessage(linhas, subtotal, delivery, resgateInfo, paymentStatus);
   const url = `${WA_BASE}/${whatsappNumero}?text=${encodeURIComponent(mensagem)}`;
 
-  // Após await (fluxo Stripe), window.open é bloqueado pelos browsers — usar location.href
-  // No fluxo direto (botão WhatsApp), window.open abre nova aba normalmente
   if (paymentStatus === 'online') {
-    window.location.href = url;
+    // Após await (fluxo Stripe), window.open é bloqueado. Elemento <a> sintético
+    // simula gesto do usuário e não redireciona a página atual.
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   } else {
     window.open(url, '_blank');
   }
