@@ -3,7 +3,7 @@ import type { CartItem } from "@/types/cart";
 import type { EnderecoCliente } from "@/types/catalog";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { formatCurrency, toMoney } from "@/utils/formatCurrency";
-import { criarCheckoutSession } from "@/services/api";
+import { criarPaymentIntent } from "@/services/api";
 import { StripeCheckout } from "@/components/catalog/StripeCheckout";
 
 interface CartDrawerProps {
@@ -241,12 +241,11 @@ function CartFooter({
     setErroStripe(null);
     setLoadingStripe(true);
     try {
-      const result = await criarCheckoutSession(
+      const result = await criarPaymentIntent(
         merchantId,
         totalFinal,
         phone ?? "",
-        `Pedido ${nomeLoja ?? ""}`,
-        window.location.href
+        `Pedido ${nomeLoja ?? ""}`
       );
       if (result.sucesso && result.client_secret) {
         setClientSecret(result.client_secret);

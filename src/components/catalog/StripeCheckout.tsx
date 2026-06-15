@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
-  CheckoutElementsProvider,
-  useCheckout,
+  Elements,
   PaymentElement,
-} from "@stripe/react-stripe-js/checkout";
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 import { Modal } from "@/components/ui/Modal";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? "");
@@ -12,7 +13,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? "");
 interface StripeCheckoutProps {
   clientSecret: string;
   total: number;
-  onSuccess: (sessionId: string) => void;
+  onSuccess: (paymentIntentId: string) => void;
   onCancel: () => void;
   onOpenWhatsApp: () => void;
 }
@@ -23,33 +24,34 @@ function CheckoutForm({
   onCancel,
   onOpenWhatsApp,
 }: Omit<StripeCheckoutProps, "clientSecret">) {
-  const result = useCheckout();
+  const stripe = useStripe();
+  const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [pagamentoConfirmado, setPagamentoConfirmado] = useState(false);
-  const [confirmedSessionId, setConfirmedSessionId] = useState("");
-
-  const checkout = result.type === "success" ? result.checkout : null;
-  const isReady = result.type === "success";
+  const [confirmedId, setConfirmedId] = useState("");
 
   const handleSubmit = async () => {
-    if (!checkout) return;
+    if (!stripe || !elements) return;
 
     setLoading(true);
     setErro(null);
 
     try {
-      const confirmResult = await checkout.confirm({
-        email: "pagamento@amxdelivery.com.br",
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        redirect: "if_required",
       });
 
-      if (confirmResult.type === "error") {
-        setErro(confirmResult.error.message ?? "Erro ao processar pagamento");
+      if (error) {
+        setErro(error.message ?? "Erro ao processar pagamento");
         return;
       }
 
-      setConfirmedSessionId(confirmResult.session.id);
-      setPagamentoConfirmado(true);
+      if (paymentIntent?.status === "succeeded") {
+        setConfirmedId(paymentIntent.id);
+        setPagamentoConfirmado(true);
+      }
     } catch (err) {
       setErro("Erro inesperado ao processar pagamento");
       console.error("[Stripe]", err);
@@ -60,7 +62,7 @@ function CheckoutForm({
 
   const handleWhatsApp = () => {
     onOpenWhatsApp();
-    onSuccess(confirmedSessionId);
+    onSuccess(confirmedId);
   };
 
   // ── Tela de sucesso ────────────────────────────────────────────────────────
@@ -92,10 +94,7 @@ function CheckoutForm({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <h2
-              className="text-xl font-700"
-              style={{ color: "var(--color-text)" }}
-            >
+            <h2 className="text-xl font-700" style={{ color: "var(--color-text)" }}>
               Pagamento confirmado!
             </h2>
             <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
@@ -181,15 +180,15 @@ function CheckoutForm({
 
         <button
           onClick={handleSubmit}
-          disabled={loading || !isReady}
+          disabled={loading || !stripe}
           className="w-full py-3.5 rounded-xl text-sm font-700 transition-all active:scale-[0.98]"
           style={{
             backgroundColor:
-              loading || !isReady ? "var(--color-surface-2)" : "var(--color-primary)",
-            color: loading || !isReady ? "var(--color-text-muted)" : "#0D0D0D",
-            cursor: loading || !isReady ? "not-allowed" : "pointer",
+              loading || !stripe ? "var(--color-surface-2)" : "var(--color-primary)",
+            color: loading || !stripe ? "var(--color-text-muted)" : "#0D0D0D",
+            cursor: loading || !stripe ? "not-allowed" : "pointer",
             boxShadow:
-              !loading && isReady ? "0 4px 16px rgb(245 166 35 / 0.35)" : "none",
+              !loading && stripe ? "0 4px 16px rgb(245 166 35 / 0.35)" : "none",
           }}
         >
           {loading ? "Processando..." : "Confirmar pagamento"}
@@ -249,16 +248,13 @@ export function StripeCheckout({
       };
 
   return (
-    <CheckoutElementsProvider
-      stripe={stripePromise}
-      options={{ clientSecret, elementsOptions: { appearance } }}
-    >
+    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
       <CheckoutForm
         total={total}
         onSuccess={onSuccess}
         onCancel={onCancel}
         onOpenWhatsApp={onOpenWhatsApp}
       />
-    </CheckoutElementsProvider>
+    </Elements>
   );
 }
