@@ -23,8 +23,6 @@ function CheckoutForm({
 }: Omit<StripeCheckoutProps, "clientSecret">) {
   const result = useCheckout();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [emailErro, setEmailErro] = useState("");
   const [erro, setErro] = useState<string | null>(null);
 
   const checkout = result.type === "success" ? result.checkout : null;
@@ -33,18 +31,13 @@ function CheckoutForm({
   const handleSubmit = async () => {
     if (!checkout) return;
 
-    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    if (!emailValido) {
-      setEmailErro("Informe um e-mail válido");
-      return;
-    }
-    setEmailErro("");
-
     setLoading(true);
     setErro(null);
 
     try {
-      const confirmResult = await checkout.confirm({ email });
+      const confirmResult = await checkout.confirm({
+        email: "pagamento@amxdelivery.com.br",
+      });
 
       if (confirmResult.type === "error") {
         setErro(confirmResult.error.message ?? "Erro ao processar pagamento");
@@ -95,41 +88,7 @@ function CheckoutForm({
       </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4">
-        {/* Campo e-mail */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="stripe-email"
-            className="text-sm font-600"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            Seu e-mail
-          </label>
-          <input
-            id="stripe-email"
-            type="email"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setEmailErro(""); }}
-            placeholder="seu@email.com"
-            autoComplete="email"
-            style={{
-              width: "100%",
-              background: "var(--color-surface)",
-              border: `1px solid ${emailErro ? "var(--color-error, #ef4444)" : "var(--color-border)"}`,
-              borderRadius: "8px",
-              padding: "10px 12px",
-              color: "var(--color-text)",
-              fontSize: "14px",
-              outline: "none",
-            }}
-          />
-          {emailErro && (
-            <p className="text-xs" style={{ color: "var(--color-error, #ef4444)", margin: 0 }}>
-              {emailErro}
-            </p>
-          )}
-        </div>
-
+      <div className="flex-1 overflow-y-auto px-5 py-5">
         <PaymentElement />
       </div>
 
