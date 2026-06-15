@@ -36,5 +36,7 @@ export function abrirWhatsApp(
 
   const mensagem = formatWhatsappMessage(linhas, subtotal, delivery, resgateInfo, paymentStatus);
   const url = `${WA_BASE}/${whatsappNumero}?text=${encodeURIComponent(mensagem)}`;
-  window.open(url, '_blank');
+  const win = window.open(url, '_blank');
+  // Fallback para quando window.open é bloqueado pelo browser (ex: após await em iOS/mobile)
+  if (!win) window.location.href = url;
 }
