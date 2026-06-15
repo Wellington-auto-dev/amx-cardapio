@@ -6,6 +6,7 @@ import {
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import { Modal } from "@/components/ui/Modal";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? "");
 
@@ -49,92 +50,92 @@ function CheckoutForm({
   };
 
   return (
-    <div
-      style={{
-        background: "var(--color-surface)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "12px",
-        padding: "24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-      }}
-    >
+    <Modal open={true} onClose={onCancel} maxWidth={480} fullscreenMobile={false}>
+      {/* Header */}
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
+        className="flex items-center justify-between px-5 py-4"
+        style={{ borderBottom: "1px solid var(--color-border)" }}
       >
-        <span
-          style={{
-            color: "var(--color-text)",
-            fontWeight: 600,
-            fontSize: "16px",
-          }}
-        >
+        <span className="text-base font-700" style={{ color: "var(--color-text)" }}>
           Pagamento Online
         </span>
-        <span
-          style={{
-            color: "var(--color-primary)",
-            fontWeight: 700,
-            fontSize: "18px",
-          }}
-        >
-          R$ {total.toFixed(2).replace(".", ",")}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-700" style={{ color: "var(--color-primary)" }}>
+            R$ {total.toFixed(2).replace(".", ",")}
+          </span>
+          <button
+            onClick={onCancel}
+            aria-label="Fechar"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+            style={{
+              backgroundColor: "var(--color-surface-2)",
+              color: "var(--color-text-muted)",
+            }}
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      <PaymentElement />
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-5 py-5">
+        <PaymentElement />
+      </div>
 
-      {erro && (
-        <p
+      {/* Footer */}
+      <div
+        className="px-5 py-4 flex flex-col gap-3"
+        style={{
+          borderTop: "1px solid var(--color-border)",
+          backgroundColor: "var(--color-surface)",
+        }}
+      >
+        {erro && (
+          <p
+            className="text-sm text-center"
+            style={{ color: "var(--color-error, #ef4444)", margin: 0 }}
+          >
+            {erro}
+          </p>
+        )}
+
+        <button
+          onClick={handleSubmit}
+          disabled={loading || !stripe}
+          className="w-full py-3.5 rounded-xl text-sm font-700 transition-all active:scale-[0.98]"
           style={{
-            color: "var(--color-error, #ef4444)",
-            fontSize: "14px",
-            margin: 0,
+            backgroundColor:
+              loading || !stripe ? "var(--color-surface-2)" : "var(--color-primary)",
+            color: loading || !stripe ? "var(--color-text-muted)" : "#0D0D0D",
+            cursor: loading || !stripe ? "not-allowed" : "pointer",
+            boxShadow:
+              !loading && stripe ? "0 4px 16px rgb(245 166 35 / 0.35)" : "none",
           }}
         >
-          {erro}
-        </p>
-      )}
+          {loading ? "Processando..." : "Confirmar pagamento"}
+        </button>
 
-      <button
-        onClick={handleSubmit}
-        disabled={loading || !stripe}
-        style={{
-          background: loading ? "var(--color-border)" : "var(--color-primary)",
-          color: loading ? "var(--color-text-muted)" : "#000",
-          border: "none",
-          borderRadius: "8px",
-          padding: "14px",
-          fontWeight: 700,
-          fontSize: "15px",
-          cursor: loading ? "not-allowed" : "pointer",
-          width: "100%",
-        }}
-      >
-        {loading ? "Processando..." : "Confirmar pagamento"}
-      </button>
-
-      <button
-        onClick={onCancel}
-        style={{
-          background: "transparent",
-          color: "var(--color-text-muted)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "8px",
-          padding: "12px",
-          fontSize: "14px",
-          cursor: "pointer",
-          width: "100%",
-        }}
-      >
-        Cancelar
-      </button>
-    </div>
+        <button
+          onClick={onCancel}
+          disabled={loading}
+          className="w-full py-3 rounded-xl text-sm transition-colors"
+          style={{
+            background: "transparent",
+            color: "var(--color-text-muted)",
+            border: "1px solid var(--color-border)",
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
+        >
+          Cancelar
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -144,11 +145,36 @@ export function StripeCheckout({
   onSuccess,
   onCancel,
 }: StripeCheckoutProps) {
+  const isDark = document.documentElement.classList.contains("dark");
+
+  const appearance = isDark
+    ? {
+        theme: "night" as const,
+        variables: {
+          colorPrimary: "#f59e0b",
+          colorBackground: "#1e1e1e",
+          colorText: "#ffffff",
+          colorTextSecondary: "#9ca3af",
+          colorDanger: "#ef4444",
+          borderRadius: "8px",
+          fontFamily: "Arial, sans-serif",
+        },
+      }
+    : {
+        theme: "stripe" as const,
+        variables: {
+          colorPrimary: "#f59e0b",
+          colorBackground: "#ffffff",
+          colorText: "#111827",
+          colorTextSecondary: "#6b7280",
+          colorDanger: "#ef4444",
+          borderRadius: "8px",
+          fontFamily: "Arial, sans-serif",
+        },
+      };
+
   return (
-    <Elements
-      stripe={stripePromise}
-      options={{ clientSecret, appearance: { theme: "night" } }}
-    >
+    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
       <CheckoutForm total={total} onSuccess={onSuccess} onCancel={onCancel} />
     </Elements>
   );
