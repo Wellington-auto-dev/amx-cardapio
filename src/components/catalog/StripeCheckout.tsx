@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
-  Elements,
+  CheckoutElementsProvider,
+  useCheckoutElements,
   PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+} from "@stripe/react-stripe-js/checkout";
 import { Modal } from "@/components/ui/Modal";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? "");
@@ -13,7 +12,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY ?? "");
 interface StripeCheckoutProps {
   clientSecret: string;
   total: number;
-  onSuccess: (paymentIntentId: string) => void;
+  onSuccess: (sessionId: string) => void;
   onCancel: () => void;
 }
 
@@ -22,30 +21,27 @@ function CheckoutForm({
   onSuccess,
   onCancel,
 }: Omit<StripeCheckoutProps, "clientSecret">) {
-  const stripe = useStripe();
-  const elements = useElements();
+  const result = useCheckoutElements();
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
+  const checkout = result.type === "success" ? result.checkout : null;
+  const isReady = result.type === "success";
+
   const handleSubmit = async () => {
-    if (!stripe || !elements) return;
+    if (!checkout) return;
     setLoading(true);
     setErro(null);
 
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      redirect: "if_required",
-    });
+    const confirmResult = await checkout.confirm();
 
-    if (error) {
-      setErro(error.message ?? "Erro ao processar pagamento");
+    if (confirmResult.type === "error") {
+      setErro(confirmResult.error.message ?? "Erro ao processar pagamento");
       setLoading(false);
       return;
     }
 
-    if (paymentIntent?.status === "succeeded") {
-      onSuccess(paymentIntent.id);
-    }
+    onSuccess(confirmResult.session.id);
     setLoading(false);
   };
 
@@ -107,15 +103,15 @@ function CheckoutForm({
 
         <button
           onClick={handleSubmit}
-          disabled={loading || !stripe}
+          disabled={loading || !isReady}
           className="w-full py-3.5 rounded-xl text-sm font-700 transition-all active:scale-[0.98]"
           style={{
             backgroundColor:
-              loading || !stripe ? "var(--color-surface-2)" : "var(--color-primary)",
-            color: loading || !stripe ? "var(--color-text-muted)" : "#0D0D0D",
-            cursor: loading || !stripe ? "not-allowed" : "pointer",
+              loading || !isReady ? "var(--color-surface-2)" : "var(--color-primary)",
+            color: loading || !isReady ? "var(--color-text-muted)" : "#0D0D0D",
+            cursor: loading || !isReady ? "not-allowed" : "pointer",
             boxShadow:
-              !loading && stripe ? "0 4px 16px rgb(245 166 35 / 0.35)" : "none",
+              !loading && isReady ? "0 4px 16px rgb(245 166 35 / 0.35)" : "none",
           }}
         >
           {loading ? "Processando..." : "Confirmar pagamento"}
@@ -174,8 +170,11 @@ export function StripeCheckout({
       };
 
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+    <CheckoutElementsProvider
+      stripe={stripePromise}
+      options={{ clientSecret, elementsOptions: { appearance } }}
+    >
       <CheckoutForm total={total} onSuccess={onSuccess} onCancel={onCancel} />
-    </Elements>
+    </CheckoutElementsProvider>
   );
 }

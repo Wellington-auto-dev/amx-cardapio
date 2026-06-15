@@ -559,12 +559,13 @@ export async function fetchChat(
   return data;
 }
 
-// Stripe — criar Payment Intent via M16
-export async function criarPaymentIntent(
+// Stripe — criar Checkout Session via M16
+export async function criarCheckoutSession(
   merchantId: string,
   total: number,
   phone: string,
-  descricao: string
+  descricao: string,
+  returnUrl: string
 ): Promise<{
   sucesso: boolean;
   client_secret?: string;
@@ -576,6 +577,7 @@ export async function criarPaymentIntent(
     total,
     phone,
     descricao,
+    return_url: returnUrl,
   });
   return data;
 }
