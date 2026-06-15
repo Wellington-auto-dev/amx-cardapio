@@ -264,6 +264,10 @@ function CartFooter({
   const handleStripeSuccess = () => {
     setShowStripe(false);
     setClientSecret(null);
+    // onFinalize("online") é chamado via onOpenWhatsApp no clique direto do usuário
+  };
+
+  const handleOpenWhatsApp = () => {
     onFinalize("online");
   };
 
@@ -387,6 +391,7 @@ function CartFooter({
           total={totalFinal}
           onSuccess={handleStripeSuccess}
           onCancel={handleStripeCancel}
+          onOpenWhatsApp={handleOpenWhatsApp}
         />
       ) : (
         <>

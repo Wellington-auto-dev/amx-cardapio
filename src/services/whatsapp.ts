@@ -37,17 +37,5 @@ export function abrirWhatsApp(
   const mensagem = formatWhatsappMessage(linhas, subtotal, delivery, resgateInfo, paymentStatus);
   const url = `${WA_BASE}/${whatsappNumero}?text=${encodeURIComponent(mensagem)}`;
 
-  if (paymentStatus === 'online') {
-    // Após await (fluxo Stripe), window.open é bloqueado. Elemento <a> sintético
-    // simula gesto do usuário e não redireciona a página atual.
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } else {
-    window.open(url, '_blank');
-  }
+  window.open(url, '_blank');
 }
