@@ -2,7 +2,7 @@ import { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   CheckoutElementsProvider,
-  useCheckoutElements,
+  useCheckout,
   PaymentElement,
 } from "@stripe/react-stripe-js/checkout";
 import { Modal } from "@/components/ui/Modal";
@@ -21,7 +21,7 @@ function CheckoutForm({
   onSuccess,
   onCancel,
 }: Omit<StripeCheckoutProps, "clientSecret">) {
-  const result = useCheckoutElements();
+  const result = useCheckout();
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -33,16 +33,26 @@ function CheckoutForm({
     setLoading(true);
     setErro(null);
 
-    const confirmResult = await checkout.confirm();
+    console.log("[Stripe] iniciando confirm");
 
-    if (confirmResult.type === "error") {
-      setErro(confirmResult.error.message ?? "Erro ao processar pagamento");
+    try {
+      const confirmResult = await checkout.confirm();
+
+      console.log("[Stripe] resultado:", confirmResult);
+
+      if (confirmResult.type === "error") {
+        console.log("[Stripe] erro:", confirmResult.error);
+        setErro(confirmResult.error.message ?? "Erro ao processar pagamento");
+        return;
+      }
+
+      onSuccess(confirmResult.session.id);
+    } catch (err) {
+      console.log("[Stripe] erro:", err);
+      setErro("Erro inesperado ao processar pagamento");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    onSuccess(confirmResult.session.id);
-    setLoading(false);
   };
 
   return (
