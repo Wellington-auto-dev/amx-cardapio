@@ -24,6 +24,7 @@ function CheckoutForm({
   const result = useCheckout();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [emailErro, setEmailErro] = useState("");
   const [erro, setErro] = useState<string | null>(null);
 
   const checkout = result.type === "success" ? result.checkout : null;
@@ -32,10 +33,12 @@ function CheckoutForm({
   const handleSubmit = async () => {
     if (!checkout) return;
 
-    if (!email.trim()) {
-      setErro("Informe seu e-mail para continuar");
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    if (!emailValido) {
+      setEmailErro("Informe um e-mail válido");
       return;
     }
+    setEmailErro("");
 
     setLoading(true);
     setErro(null);
@@ -106,16 +109,25 @@ function CheckoutForm({
             id="stripe-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setEmailErro(""); }}
             placeholder="seu@email.com"
             autoComplete="email"
-            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-colors"
             style={{
-              backgroundColor: "var(--color-surface-2)",
-              border: "1px solid var(--color-border)",
+              width: "100%",
+              background: "var(--color-surface)",
+              border: `1px solid ${emailErro ? "var(--color-error, #ef4444)" : "var(--color-border)"}`,
+              borderRadius: "8px",
+              padding: "10px 12px",
               color: "var(--color-text)",
+              fontSize: "14px",
+              outline: "none",
             }}
           />
+          {emailErro && (
+            <p className="text-xs" style={{ color: "var(--color-error, #ef4444)", margin: 0 }}>
+              {emailErro}
+            </p>
+          )}
         </div>
 
         <PaymentElement />
